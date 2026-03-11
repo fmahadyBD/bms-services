@@ -1,18 +1,22 @@
 package com.fmahadybd.bms_services.student.model;
 
 import com.fmahadybd.bms_services.enums.GENDER;
+import com.fmahadybd.bms_services.route.model.Route;
+import com.fmahadybd.bms_services.routine.model.ClassRoutine;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "students", indexes = {
-    @Index(name = "idx_student_id", columnList = "studentId", unique = true),
-    @Index(name = "idx_student_email", columnList = "email", unique = true),
-    @Index(name = "idx_student_phone", columnList = "phoneNumber", unique = true)
+        @Index(name = "idx_student_id", columnList = "studentId", unique = true),
+        @Index(name = "idx_student_email", columnList = "email", unique = true),
+        @Index(name = "idx_student_phone", columnList = "phoneNumber", unique = true)
 })
 @NoArgsConstructor
 @AllArgsConstructor
@@ -26,7 +30,7 @@ public class Student {
     private Long id;
 
     @Column(nullable = false, unique = true, length = 20)
-    private String studentId;  // e.g. "2210024**"
+    private String studentId; // e.g. "2210024**"
 
     @Column(nullable = false, length = 100)
     private String name;
@@ -44,7 +48,7 @@ public class Student {
     private String department;
 
     @Column(nullable = false, length = 20)
-    private String batch;      // e.g. "221"
+    private String batch; // e.g. "221"
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -54,10 +58,19 @@ public class Student {
     private boolean isBlocked = false;
 
     @Column(nullable = false, length = 20)
-    private String shift;      // e.g. , "Day", "Evening"
+    private String shift; // e.g. , "Day", "Evening"
 
     @Column(nullable = false)
-    private String password;   // BCrypt hashed
+    private String password; // BCrypt hashed
+
+    // Many-to-One with Route (Many students can use the same route)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "route_id")
+    private Route route;
+
+    // Many-to-Many with ClassRoutine
+    @ManyToMany(mappedBy = "students")
+    private List<ClassRoutine> routines = new ArrayList<>();
 
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
@@ -66,7 +79,4 @@ public class Student {
     @UpdateTimestamp
     @Column(nullable = false)
     private LocalDateTime updatedAt;
-
-    // TODO: ManyToOne Route relationship
-    // TODO: Class Routine relationship
 }

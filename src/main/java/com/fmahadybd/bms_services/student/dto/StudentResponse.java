@@ -1,4 +1,3 @@
-// ─── StudentResponse.java  (safe — never expose password) ──────────────────
 package com.fmahadybd.bms_services.student.dto;
 
 import com.fmahadybd.bms_services.enums.GENDER;
@@ -23,6 +22,9 @@ public class StudentResponse {
     private GENDER gender;
     private boolean isBlocked;
     private String shift;
+    private Long routeId;           // Add this
+    private String routeName;        // Add this
+    private String busNo;            // Add this
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }
