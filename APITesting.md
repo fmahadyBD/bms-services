@@ -109,7 +109,7 @@ http://localhost:8080/api/v1
     "blocked": false,
     "shift": "Day",
     "routeId": 1,
-    "routeName": "Gulshan - BUET",
+    "routeName": "Gulshan - GUB",
     "busNo": "BUS-01",
     "createdAt": "2024-01-15T11:45:00",
     "updatedAt": "2024-01-15T11:45:00"
@@ -248,7 +248,7 @@ http://localhost:8080/api/v1
     "blocked": false,
     "shift": "Day",
     "routeId": 1,
-    "routeName": "Gulshan - BUET",
+    "routeName": "Gulshan - GUB",
     "busNo": "BUS-01",
     "createdAt": "2024-01-15T11:45:00",
     "updatedAt": "2024-01-15T11:45:00"
@@ -314,7 +314,7 @@ http://localhost:8080/api/v1
   "blocked": false,
   "shift": "Morning",
   "routeId": 1,
-  "routeName": "Gulshan - BUET",
+  "routeName": "Gulshan - GUB",
   "busNo": "BUS-01",
   "createdAt": "2024-01-15T10:30:00",
   "updatedAt": "2024-01-15T13:20:00"
@@ -468,8 +468,8 @@ http://localhost:8080/api/v1
 ```json
 {
   "busNo": "BUS-01",
-  "routeName": "Gulshan - BUET",
-  "routeLine": "Gulshan 1 → Banani → Farmgate → Shahbag → BUET",
+  "routeName": "Gulshan - GUB",
+  "routeLine": "Gulshan 1 → Banani → Farmgate → Shahbag → GUB",
   "pickupPoints": [
     {
       "placeName": "Gulshan 1",
@@ -496,8 +496,8 @@ http://localhost:8080/api/v1
       "stopOrder": 4
     },
     {
-      "placeName": "BUET",
-      "placeDetails": "BUET Main Gate",
+      "placeName": "GUB",
+      "placeDetails": "GUB Main Gate",
       "pickupTime": "08:30",
       "stopOrder": 5
     }
@@ -511,8 +511,8 @@ http://localhost:8080/api/v1
 {
   "id": 1,
   "busNo": "BUS-01",
-  "routeName": "Gulshan - BUET",
-  "routeLine": "Gulshan 1 → Banani → Farmgate → Shahbag → BUET",
+  "routeName": "Gulshan - GUB",
+  "routeLine": "Gulshan 1 → Banani → Farmgate → Shahbag → GUB",
   "status": "ACTIVE",
   "pickupPoints": [
     {
@@ -545,8 +545,8 @@ http://localhost:8080/api/v1
     },
     {
       "id": 5,
-      "placeName": "BUET",
-      "placeDetails": "BUET Main Gate",
+      "placeName": "GUB",
+      "placeDetails": "GUB Main Gate",
       "pickupTime": "08:30:00",
       "stopOrder": 5
     }
@@ -568,8 +568,8 @@ http://localhost:8080/api/v1
   {
     "id": 1,
     "busNo": "BUS-01",
-    "routeName": "Gulshan - BUET",
-    "routeLine": "Gulshan 1 → Banani → Farmgate → Shahbag → BUET",
+    "routeName": "Gulshan - GUB",
+    "routeLine": "Gulshan 1 → Banani → Farmgate → Shahbag → GUB",
     "status": "ACTIVE",
     "pickupPoints": [
       {
@@ -587,8 +587,8 @@ http://localhost:8080/api/v1
   {
     "id": 2,
     "busNo": "BUS-02",
-    "routeName": "Mirpur - BUET",
-    "routeLine": "Mirpur 10 → Kallyanpur → Shyamoli → Asad Gate → BUET",
+    "routeName": "Mirpur - GUB",
+    "routeLine": "Mirpur 10 → Kallyanpur → Shyamoli → Asad Gate → GUB",
     "status": "ACTIVE",
     "pickupPoints": [
       {
@@ -616,8 +616,8 @@ http://localhost:8080/api/v1
 {
   "id": 1,
   "busNo": "BUS-01",
-  "routeName": "Gulshan - BUET",
-  "routeLine": "Gulshan 1 → Banani → Farmgate → Shahbag → BUET",
+  "routeName": "Gulshan - GUB",
+  "routeLine": "Gulshan 1 → Banani → Farmgate → Shahbag → GUB",
   "status": "ACTIVE",
   "pickupPoints": [
     {
@@ -650,8 +650,8 @@ http://localhost:8080/api/v1
     },
     {
       "id": 5,
-      "placeName": "BUET",
-      "placeDetails": "BUET Main Gate",
+      "placeName": "GUB",
+      "placeDetails": "GUB Main Gate",
       "pickupTime": "08:30:00",
       "stopOrder": 5
     }
@@ -672,8 +672,8 @@ http://localhost:8080/api/v1
 {
   "id": 1,
   "busNo": "BUS-01",
-  "routeName": "Gulshan - BUET",
-  "routeLine": "Gulshan 1 → Banani → Farmgate → Shahbag → BUET",
+  "routeName": "Gulshan - GUB",
+  "routeLine": "Gulshan 1 → Banani → Farmgate → Shahbag → GUB",
   "status": "ACTIVE",
   "pickupPoints": [
     {
@@ -701,14 +701,14 @@ http://localhost:8080/api/v1
   {
     "id": 1,
     "busNo": "BUS-01",
-    "routeName": "Gulshan - BUET",
+    "routeName": "Gulshan - GUB",
     "status": "ACTIVE",
     "operatingDays": ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY"]
   },
   {
     "id": 2,
     "busNo": "BUS-02",
-    "routeName": "Mirpur - BUET",
+    "routeName": "Mirpur - GUB",
     "status": "ACTIVE",
     "operatingDays": ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY"]
   }
@@ -725,8 +725,8 @@ http://localhost:8080/api/v1
 {
   "id": 1,
   "busNo": "BUS-01",
-  "routeName": "Gulshan - BUET",
-  "routeLine": "Gulshan 1 → Banani → Farmgate → Shahbag → BUET",
+  "routeName": "Gulshan - GUB",
+  "routeLine": "Gulshan 1 → Banani → Farmgate → Shahbag → GUB",
   "status": "INACTIVE",
   "pickupPoints": [...],
   "operatingDays": ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY"],
@@ -1010,8 +1010,8 @@ curl -X POST http://localhost:8080/api/v1/routes \
   -H "Content-Type: application/json" \
   -d '{
     "busNo": "BUS-01",
-    "routeName": "Gulshan - BUET",
-    "routeLine": "Gulshan 1 → Banani → Farmgate → Shahbag → BUET",
+    "routeName": "Gulshan - GUB",
+    "routeLine": "Gulshan 1 → Banani → Farmgate → Shahbag → GUB",
     "pickupPoints": [
       {
         "placeName": "Gulshan 1",
