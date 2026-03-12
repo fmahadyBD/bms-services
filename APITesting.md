@@ -10,28 +10,19 @@ http://localhost:8080/api/v1
 ## 📚 Student APIs
 
 ### 1. Register Student
-**Endpoint:** `POST /students/register`
+**Endpoint:** `POST http://localhost:8080/auth/register/student 
+`
 
 **Request Body:**
 ```json
-{
-  "studentId": "CSE-2021-001",
-  "name": "John Doe",
-  "email": "john.doe@example.com",
-  "phoneNumber": "+8801712345678",
-  "address": "House 12, Road 5, Dhanmondi, Dhaka",
-  "department": "Computer Science",
-  "batch": "2021",
-  "gender": "MALE",
-  "shift": "Morning",
-  "password": "Pass@1234"
-}
+http://localhost:8080/auth/register/student \
+
 ```
 
 **Success Response (201 Created):**
 ```json
 {
-  "id": 1,
+ 
   "studentId": "CSE-2021-001",
   "name": "John Doe",
   "email": "john.doe@example.com",

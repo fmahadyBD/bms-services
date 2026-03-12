@@ -18,27 +18,24 @@ public class StudentController {
 
     private final StudentService studentService;
 
-    // ── Register Student ─────────────────────────────────────────────────
-    // Only managers can register new students
-    @PostMapping("/register")
-    @PreAuthorize("hasRole('MANAGER')")
-    public ResponseEntity<StudentResponse> register(
-            @Valid @RequestBody RegisterStudentRequest req) {
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(studentService.register(req));
-    }
+
+    // ── Register Student (Manager only) ─────────────────────────────────
+    // @PostMapping("/register")
+    // @PreAuthorize("hasRole('MANAGER')")
+    // public ResponseEntity<StudentResponse> register(
+    //         @Valid @RequestBody RegisterStudentRequest req) {
+    //     return ResponseEntity.status(HttpStatus.CREATED)
+    //             .body(studentService.register(req));
+    // }
 
     // ── Get All Students ─────────────────────────────────────────────────
-    // Only managers can list all students
     @GetMapping
-    @PreAuthorize("hasRole('MANAGER')")
+    // @PreAuthorize("hasRole('MANAGER')")
     public ResponseEntity<List<StudentResponse>> getAllStudents() {
         return ResponseEntity.ok(studentService.findAll());
     }
 
     // ── Get Student by ID ────────────────────────────────────────────────
-    // Managers can look up any student; students can only look up themselves.
-    // The service layer enforces the "self-only" rule via @studentId == principal.
     @GetMapping("/{studentId}")
     @PreAuthorize("hasRole('MANAGER') or (hasRole('STUDENT') and @studentSecurity.isSelf(authentication, #studentId))")
     public ResponseEntity<StudentResponse> getByStudentId(
@@ -80,7 +77,6 @@ public class StudentController {
     }
 
     // ── Update Student ───────────────────────────────────────────────────
-    // Managers can update any student; students can only update themselves.
     @PatchMapping("/{studentId}")
     @PreAuthorize("hasRole('MANAGER') or (hasRole('STUDENT') and @studentSecurity.isSelf(authentication, #studentId))")
     public ResponseEntity<StudentResponse> update(
@@ -90,7 +86,6 @@ public class StudentController {
     }
 
     // ── Assign Route to Student ──────────────────────────────────────────
-    // Route assignment is a manager-only operation
     @PatchMapping("/{studentId}/assign-route/{routeId}")
     @PreAuthorize("hasRole('MANAGER')")
     public ResponseEntity<StudentResponse> assignRoute(
@@ -108,7 +103,6 @@ public class StudentController {
     }
 
     // ── Get Student's Routines ───────────────────────────────────────────
-    // Managers can view any student's routines; students can only view their own.
     @GetMapping("/{studentId}/routines")
     @PreAuthorize("hasRole('MANAGER') or (hasRole('STUDENT') and @studentSecurity.isSelf(authentication, #studentId))")
     public ResponseEntity<List<StudentRoutineResponse>> getStudentRoutines(
@@ -133,7 +127,6 @@ public class StudentController {
     }
 
     // ── Change Password ──────────────────────────────────────────────────
-    // Students can only change their own password; managers cannot change it for them.
     @PatchMapping("/{studentId}/change-password")
     @PreAuthorize("hasRole('STUDENT') and @studentSecurity.isSelf(authentication, #studentId)")
     public ResponseEntity<Void> changePassword(

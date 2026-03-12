@@ -4,21 +4,21 @@ import com.fmahadybd.bms_services.auth.BaseUser;
 import com.fmahadybd.bms_services.auth.dto.AuthenticationRequest;
 import com.fmahadybd.bms_services.auth.dto.AuthenticationResponse;
 import com.fmahadybd.bms_services.auth.dto.ManagerRegistrationRequest;
-import com.fmahadybd.bms_services.auth.dto.StudentRegistrationRequest;
 import com.fmahadybd.bms_services.auth.model.Token;
 import com.fmahadybd.bms_services.auth.model.TokenType;
 import com.fmahadybd.bms_services.auth.repository.TokenRepository;
 import com.fmahadybd.bms_services.auth.security.JwtService;
 import com.fmahadybd.bms_services.manager.model.Manager;
 import com.fmahadybd.bms_services.manager.repository.ManagerRepository;
+import com.fmahadybd.bms_services.student.dto.RegisterStudentRequest;
 import com.fmahadybd.bms_services.student.model.Student;
 import com.fmahadybd.bms_services.student.repository.StudentRepository;
+import com.fmahadybd.bms_services.student.service.StudentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -38,30 +38,22 @@ public class AuthenticationService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
+    private final StudentService studentService;
     private final Random random = new Random();
 
     @Value("${application.security.jwt.expiration}")
     private long jwtExpiration;
 
     @Transactional
-    public void registerStudent(StudentRegistrationRequest request) {
+    public void registerStudent(RegisterStudentRequest request) {
         // Check if user already exists in either repository
         if (studentRepository.findByEmail(request.getEmail()).isPresent() ||
             managerRepository.findByEmail(request.getEmail()).isPresent()) {
             throw new IllegalStateException("User with email '" + request.getEmail() + "' already exists");
         }
 
-        var student = Student.builder()
-                .name(request.getFirstname() + " " + request.getLastname())
-                .email(request.getEmail())
-                .password(passwordEncoder.encode(request.getPassword()))
-                .studentId(request.getStudentId())
-                .department(request.getDepartment())
-                .batch(request.getYear() != null ? request.getYear().toString() : "")
-                .isBlocked(false)
-                .build();
-
-        studentRepository.save(student);
+        // Use the StudentService to register
+        studentService.register(request);
     }
 
     @Transactional
@@ -140,7 +132,6 @@ public class AuthenticationService {
             existingToken.setToken(jwtToken);
             existingToken.setExpired(false);
             existingToken.setRevoked(false);
-            // FIX: Use plusSeconds or plusNanos instead of plusMillis
             existingToken.setExpiresAt(LocalDateTime.now().plus(jwtExpiration, ChronoUnit.MILLIS));
             tokenRepository.save(existingToken);
         } else {
@@ -151,7 +142,6 @@ public class AuthenticationService {
                     .tokenType(TokenType.BEARER)
                     .expired(false)
                     .revoked(false)
-                    // FIX: Use plusSeconds or plusNanos instead of plusMillis
                     .expiresAt(LocalDateTime.now().plus(jwtExpiration, ChronoUnit.MILLIS))
                     .build();
             tokenRepository.save(token);
