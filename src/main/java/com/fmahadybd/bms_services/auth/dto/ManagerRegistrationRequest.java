@@ -1,8 +1,8 @@
 package com.fmahadybd.bms_services.auth.dto;
 
-
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.Builder;
 import lombok.Getter;
@@ -40,4 +40,12 @@ public class ManagerRegistrationRequest {
     
     @NotBlank(message = "Position is mandatory")
     private String position;
+    
+    // Add phone number field
+    @NotBlank(message = "Phone number is mandatory")
+    @Pattern(regexp = "^(?:\\+880|0)1[3-9]\\d{8}$", message = "Invalid Bangladeshi phone number")
+    private String phoneNumber;
+    
+    // Optional address field
+    private String address;
 }

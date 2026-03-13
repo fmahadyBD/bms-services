@@ -69,26 +69,34 @@ public class AuthenticationService {
         studentRepository.save(student);
     }
 
-    @Transactional
-    public void registerManager(ManagerRegistrationRequest request) {
-        // FIX: consistent use of DuplicateResourceException instead of IllegalStateException
-        if (studentRepository.findByEmail(request.getEmail()).isPresent() ||
-            managerRepository.findByEmail(request.getEmail()).isPresent()) {
-            throw new DuplicateResourceException("Email already registered: " + request.getEmail());
-        }
-
-        var manager = Manager.builder()
-                .name(request.getFirstname() + " " + request.getLastname())
-                .email(request.getEmail())
-                .password(passwordEncoder.encode(request.getPassword()))
-                .managerId(request.getEmployeeId())
-                .department(request.getDepartment())
-                .designation(request.getPosition())
-                .isBlocked(false)
-                .build();
-
-        managerRepository.save(manager);
+@Transactional
+public void registerManager(ManagerRegistrationRequest request) {
+    // Check if user already exists
+    if (studentRepository.findByEmail(request.getEmail()).isPresent() ||
+        managerRepository.findByEmail(request.getEmail()).isPresent()) {
+        throw new DuplicateResourceException("Email already registered: " + request.getEmail());
     }
+    
+    // Check if phone number already exists
+    if (managerRepository.existsByPhoneNumber(request.getPhoneNumber())) {
+        throw new DuplicateResourceException("Phone number already registered: " + request.getPhoneNumber());
+    }
+
+    var manager = Manager.builder()
+            .name(request.getFirstname() + " " + request.getLastname())
+            .email(request.getEmail())
+            .password(passwordEncoder.encode(request.getPassword()))
+            .managerId(request.getEmployeeId())
+            .department(request.getDepartment())
+            .designation(request.getPosition())
+            .phoneNumber(request.getPhoneNumber())  // Add this
+            .address(request.getAddress())          // Add this
+            .isBlocked(false)
+            .build();
+
+    managerRepository.save(manager);
+}
+
 
     @Transactional
     public AuthenticationResponse authenticate(AuthenticationRequest request) {
