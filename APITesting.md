@@ -1,28 +1,23 @@
-# BMS Services API Testing Guide
 
-## Base URL
+# BMS Services API - Postman Testing Guide
+
+## 📌 Base URL
 ```
-http://localhost:8080/api/v1
+http://localhost:8080
 ```
 
 ---
 
-## 📚 Student APIs
+## 🔐 Authentication APIs (No Token Required)
 
-### 1. Register Student
-**Endpoint:** `POST http://localhost:8080/auth/register/student 
-`
+### 1. Register Student (Public)
+**Method:** `POST`  
+**URL:** `{{base_url}}/auth/register/student`  
+**Auth Type:** `No Auth`
 
-**Request Body:**
-```json
-http://localhost:8080/auth/register/student \
-
-```
-
-**Success Response (201 Created):**
+**Body (raw JSON):**
 ```json
 {
- 
   "studentId": "CSE-2021-001",
   "name": "John Doe",
   "email": "john.doe@example.com",
@@ -31,25 +26,46 @@ http://localhost:8080/auth/register/student \
   "department": "Computer Science",
   "batch": "2021",
   "gender": "MALE",
-  "blocked": false,
   "shift": "Morning",
-  "routeId": null,
-  "routeName": null,
-  "busNo": null,
-  "createdAt": "2024-01-15T10:30:00",
-  "updatedAt": "2024-01-15T10:30:00"
+  "password": "Pass@1234"
 }
 ```
 
+**Expected Response:** `202 Accepted` (No body)
+
 ---
 
-### 2. Student Login
-**Endpoint:** `POST /students/login`
+### 2. Register Manager (Public)
+**Method:** `POST`  
+**URL:** `{{base_url}}/auth/register/manager`  
+**Auth Type:** `No Auth`
 
-**Request Body:**
+**Body (raw JSON):**
 ```json
 {
-  "studentId": "CSE-2021-001",
+  "firstname": "Admin",
+  "lastname": "User",
+  "email": "admin@example.com",
+  "password": "Admin@1234",
+  "employeeId": "MGR001",
+  "department": "Administration",
+  "position": "Senior Manager"
+}
+```
+
+**Expected Response:** `202 Accepted` (No body)
+
+---
+
+### 3. Login (Get JWT Token)
+**Method:** `POST`  
+**URL:** `{{base_url}}/auth/authenticate`  
+**Auth Type:** `No Auth`
+
+**Body (raw JSON):**
+```json
+{
+  "email": "john.doe@example.com",
   "password": "Pass@1234"
 }
 ```
@@ -57,202 +73,119 @@ http://localhost:8080/auth/register/student \
 **Success Response (200 OK):**
 ```json
 {
-  "message": "Login successful - Implement JWT authentication"
+  "token": "eyJhbGciOiJIUzM4NCJ9.eyJzdHVkZW50SWQiOiJCQkEtMjAyMy0wMTIiLCJyb2xlIjoiU1RVREVOVCIsImZ1bGxOYW1lIjoiTWlrZSBKb2huc29uIiwidXNlclR5cGUiOiJTVFVERU5UIiwiZGVwYXJ0bWVudCI6IkJ1c2luZXNzIEFkbWluaXN0cmF0aW9uIiwidXNlcm5hbWUiOiJtaWtlLmpAZXhhbXBsZS5jb20iLCJzdWIiOiJtaWtlLmpAZXhhbXBsZS5jb20iLCJpYXQiOjE3NzMzNzU3NTMsImV4cCI6MTc3MzQ2MjE1M30.MfSXYsB7RE5fD5mRwX-UXZ_jwvHubshrawA7CLMRjx1cCgV8R9Op7m3X3z5lvpTf",
+  "userType": "STUDENT",
+  "role": "STUDENT"
 }
 ```
 
----
-
-### 3. Get All Students
-**Endpoint:** `GET /students`
-
-**Success Response (200 OK):**
-```json
-[
-  {
-    "id": 1,
-    "studentId": "CSE-2021-001",
-    "name": "John Doe",
-    "email": "john.doe@example.com",
-    "phoneNumber": "+8801712345678",
-    "address": "House 12, Road 5, Dhanmondi, Dhaka",
-    "department": "Computer Science",
-    "batch": "2021",
-    "gender": "MALE",
-    "blocked": false,
-    "shift": "Morning",
-    "routeId": null,
-    "routeName": null,
-    "busNo": null,
-    "createdAt": "2024-01-15T10:30:00",
-    "updatedAt": "2024-01-15T10:30:00"
-  },
-  {
-    "id": 2,
-    "studentId": "EEE-2021-045",
-    "name": "Jane Smith",
-    "email": "jane.smith@example.com",
-    "phoneNumber": "+8801812345678",
-    "address": "House 5, Road 2, Gulshan, Dhaka",
-    "department": "Electrical Engineering",
-    "batch": "2021",
-    "gender": "FEMALE",
-    "blocked": false,
-    "shift": "Day",
-    "routeId": 1,
-    "routeName": "Gulshan - GUB",
-    "busNo": "BUS-01",
-    "createdAt": "2024-01-15T11:45:00",
-    "updatedAt": "2024-01-15T11:45:00"
-  }
-]
-```
+**⚠️ IMPORTANT:** Copy the `token` value from the response. You'll need it for all subsequent API calls.
 
 ---
 
-### 4. Get Student by ID
-**Endpoint:** `GET /students/CSE-2021-001`
+### 4. Logout
+**Method:** `POST`  
+**URL:** `{{base_url}}/auth/logout`  
+**Auth Type:** `Bearer Token`  
+**Token:** `Paste your JWT token here`
 
-**Success Response (200 OK):**
-```json
-{
-  "id": 1,
-  "studentId": "CSE-2021-001",
-  "name": "John Doe",
-  "email": "john.doe@example.com",
-  "phoneNumber": "+8801712345678",
-  "address": "House 12, Road 5, Dhanmondi, Dhaka",
-  "department": "Computer Science",
-  "batch": "2021",
-  "gender": "MALE",
-  "blocked": false,
-  "shift": "Morning",
-  "routeId": null,
-  "routeName": null,
-  "busNo": null,
-  "createdAt": "2024-01-15T10:30:00",
-  "updatedAt": "2024-01-15T10:30:00"
-}
-```
+**Headers:**
+| Key | Value |
+|-----|-------|
+| Authorization | Bearer YOUR_JWT_TOKEN |
+
+**Expected Response:** `200 OK` (No body)
 
 ---
 
-### 5. Search Student by Email
-**Endpoint:** `GET /students/search/email?email=john.doe@example.com`
+## 📚 Student APIs (Require JWT Token)
 
-**Success Response (200 OK):**
-```json
-{
-  "id": 1,
-  "studentId": "CSE-2021-001",
-  "name": "John Doe",
-  "email": "john.doe@example.com",
-  "phoneNumber": "+8801712345678",
-  "address": "House 12, Road 5, Dhanmondi, Dhaka",
-  "department": "Computer Science",
-  "batch": "2021",
-  "gender": "MALE",
-  "blocked": false,
-  "shift": "Morning",
-  "routeId": null,
-  "routeName": null,
-  "busNo": null,
-  "createdAt": "2024-01-15T10:30:00",
-  "updatedAt": "2024-01-15T10:30:00"
-}
-```
+**For all Student APIs, set Auth Type to `Bearer Token` and paste your JWT token**
+
+### 5. Get All Students (Manager Only)
+**Method:** `GET`  
+**URL:** `{{base_url}}/api/v1/students`  
+**Auth Type:** `Bearer Token`
+
+**Headers:**
+| Key | Value |
+|-----|-------|
+| Authorization | Bearer YOUR_JWT_TOKEN |
 
 ---
 
-### 6. Search Student by Phone
-**Endpoint:** `GET /students/search/phone?phone=%2B8801712345678`
+### 6. Get Student by ID
+**Method:** `GET`  
+**URL:** `{{base_url}}/api/v1/students/CSE-2021-001`  
+**Auth Type:** `Bearer Token`
 
-**Success Response (200 OK):**
-```json
-{
-  "id": 1,
-  "studentId": "CSE-2021-001",
-  "name": "John Doe",
-  "email": "john.doe@example.com",
-  "phoneNumber": "+8801712345678",
-  "address": "House 12, Road 5, Dhanmondi, Dhaka",
-  "department": "Computer Science",
-  "batch": "2021",
-  "gender": "MALE",
-  "blocked": false,
-  "shift": "Morning",
-  "routeId": null,
-  "routeName": null,
-  "busNo": null,
-  "createdAt": "2024-01-15T10:30:00",
-  "updatedAt": "2024-01-15T10:30:00"
-}
-```
+**URL Parameters:**
+| Parameter | Value |
+|-----------|-------|
+| studentId | CSE-2021-001 |
 
 ---
 
-### 7. Get Students by Department and Batch
-**Endpoint:** `GET /students/department/Computer Science/batch/2021`
+### 7. Search Student by Email
+**Method:** `GET`  
+**URL:** `{{base_url}}/api/v1/students/search/email?email=john.doe@example.com`  
+**Auth Type:** `Bearer Token`
 
-**Success Response (200 OK):**
-```json
-[
-  {
-    "id": 1,
-    "studentId": "CSE-2021-001",
-    "name": "John Doe",
-    "email": "john.doe@example.com",
-    "phoneNumber": "+8801712345678",
-    "address": "House 12, Road 5, Dhanmondi, Dhaka",
-    "department": "Computer Science",
-    "batch": "2021",
-    "gender": "MALE",
-    "blocked": false,
-    "shift": "Morning",
-    "routeId": null,
-    "routeName": null,
-    "busNo": null,
-    "createdAt": "2024-01-15T10:30:00",
-    "updatedAt": "2024-01-15T10:30:00"
-  }
-]
-```
+**Query Parameters:**
+| Key | Value |
+|-----|-------|
+| email | john.doe@example.com |
 
 ---
 
-### 8. Get Students by Route
-**Endpoint:** `GET /students/route/1`
+### 8. Search Student by Phone
+**Method:** `GET`  
+**URL:** `{{base_url}}/api/v1/students/search/phone?phone=%2B8801712345678`  
+**Auth Type:** `Bearer Token`
 
-**Success Response (200 OK):**
-```json
-[
-  {
-    "id": 2,
-    "studentId": "EEE-2021-045",
-    "name": "Jane Smith",
-    "email": "jane.smith@example.com",
-    "phoneNumber": "+8801812345678",
-    "address": "House 5, Road 2, Gulshan, Dhaka",
-    "department": "Electrical Engineering",
-    "batch": "2021",
-    "gender": "FEMALE",
-    "blocked": false,
-    "shift": "Day",
-    "routeId": 1,
-    "routeName": "Gulshan - GUB",
-    "busNo": "BUS-01",
-    "createdAt": "2024-01-15T11:45:00",
-    "updatedAt": "2024-01-15T11:45:00"
-  }
-]
-```
+**Query Parameters:**
+| Key | Value |
+|-----|-------|
+| phone | +8801712345678 (URL encoded: %2B8801712345678) |
 
 ---
 
-### 9. Update Student
-**Endpoint:** `PATCH /students/CSE-2021-001`
+### 9. Get Students by Department and Batch
+**Method:** `GET`  
+**URL:** `{{base_url}}/api/v1/students/department/Computer Science/batch/2021`  
+**Auth Type:** `Bearer Token`
 
-**Request Body:**
+**URL Parameters:**
+| Parameter | Value |
+|-----------|-------|
+| department | Computer Science |
+| batch | 2021 |
+
+---
+
+### 10. Get Students by Route
+**Method:** `GET`  
+**URL:** `{{base_url}}/api/v1/students/route/1`  
+**Auth Type:** `Bearer Token`
+
+**URL Parameters:**
+| Parameter | Value |
+|-----------|-------|
+| routeId | 1 |
+
+---
+
+### 11. Update Student
+**Method:** `PATCH`  
+**URL:** `{{base_url}}/api/v1/students/CSE-2021-001`  
+**Auth Type:** `Bearer Token`
+
+**Headers:**
+| Key | Value |
+|-----|-------|
+| Content-Type | application/json |
+
+**Body (raw JSON):**
 ```json
 {
   "name": "John Updated Doe",
@@ -263,175 +196,60 @@ http://localhost:8080/auth/register/student \
 }
 ```
 
-**Success Response (200 OK):**
-```json
-{
-  "id": 1,
-  "studentId": "CSE-2021-001",
-  "name": "John Updated Doe",
-  "email": "john.updated@example.com",
-  "phoneNumber": "+8801712345679",
-  "address": "House 20, Road 8, Banani, Dhaka",
-  "department": "Computer Science",
-  "batch": "2021",
-  "gender": "MALE",
-  "blocked": false,
-  "shift": "Day",
-  "routeId": null,
-  "routeName": null,
-  "busNo": null,
-  "createdAt": "2024-01-15T10:30:00",
-  "updatedAt": "2024-01-15T12:15:00"
-}
-```
+---
+
+### 12. Assign Route to Student (Manager Only)
+**Method:** `PATCH`  
+**URL:** `{{base_url}}/api/v1/students/CSE-2021-001/assign-route/1`  
+**Auth Type:** `Bearer Token`
+
+**URL Parameters:**
+| Parameter | Value |
+|-----------|-------|
+| studentId | CSE-2021-001 |
+| routeId | 1 |
 
 ---
 
-### 10. Assign Route to Student
-**Endpoint:** `PATCH /students/CSE-2021-001/assign-route/1`
-
-**Success Response (200 OK):**
-```json
-{
-  "id": 1,
-  "studentId": "CSE-2021-001",
-  "name": "John Doe",
-  "email": "john.doe@example.com",
-  "phoneNumber": "+8801712345678",
-  "address": "House 12, Road 5, Dhanmondi, Dhaka",
-  "department": "Computer Science",
-  "batch": "2021",
-  "gender": "MALE",
-  "blocked": false,
-  "shift": "Morning",
-  "routeId": 1,
-  "routeName": "Gulshan - GUB",
-  "busNo": "BUS-01",
-  "createdAt": "2024-01-15T10:30:00",
-  "updatedAt": "2024-01-15T13:20:00"
-}
-```
+### 13. Remove Route from Student (Manager Only)
+**Method:** `PATCH`  
+**URL:** `{{base_url}}/api/v1/students/CSE-2021-001/remove-route`  
+**Auth Type:** `Bearer Token`
 
 ---
 
-### 11. Remove Route from Student
-**Endpoint:** `PATCH /students/CSE-2021-001/remove-route`
-
-**Success Response (200 OK):**
-```json
-{
-  "id": 1,
-  "studentId": "CSE-2021-001",
-  "name": "John Doe",
-  "email": "john.doe@example.com",
-  "phoneNumber": "+8801712345678",
-  "address": "House 12, Road 5, Dhanmondi, Dhaka",
-  "department": "Computer Science",
-  "batch": "2021",
-  "gender": "MALE",
-  "blocked": false,
-  "shift": "Morning",
-  "routeId": null,
-  "routeName": null,
-  "busNo": null,
-  "createdAt": "2024-01-15T10:30:00",
-  "updatedAt": "2024-01-15T14:10:00"
-}
-```
+### 14. Get Student's Routines
+**Method:** `GET`  
+**URL:** `{{base_url}}/api/v1/students/CSE-2021-001/routines`  
+**Auth Type:** `Bearer Token`
 
 ---
 
-### 12. Get Student's Routines
-**Endpoint:** `GET /students/CSE-2021-001/routines`
-
-**Success Response (200 OK):**
-```json
-[
-  {
-    "routineId": 1,
-    "courseName": "Data Structures",
-    "courseCode": "CSE-2201",
-    "teacherName": "Prof. Rahman",
-    "day": "MONDAY",
-    "startTime": "09:00:00",
-    "endTime": "10:30:00",
-    "roomNumber": "Room 401",
-    "routineType": "CLASS"
-  },
-  {
-    "routineId": 2,
-    "courseName": "Algorithms Lab",
-    "courseCode": "CSE-2202",
-    "teacherName": "Dr. Khan",
-    "day": "WEDNESDAY",
-    "startTime": "14:00:00",
-    "endTime": "16:00:00",
-    "roomNumber": "Lab 203",
-    "routineType": "CLASS"
-  }
-]
-```
+### 15. Block Student (Manager Only)
+**Method:** `PATCH`  
+**URL:** `{{base_url}}/api/v1/students/CSE-2021-001/block`  
+**Auth Type:** `Bearer Token`
 
 ---
 
-### 13. Block Student
-**Endpoint:** `PATCH /students/CSE-2021-001/block`
-
-**Success Response (200 OK):**
-```json
-{
-  "id": 1,
-  "studentId": "CSE-2021-001",
-  "name": "John Doe",
-  "email": "john.doe@example.com",
-  "phoneNumber": "+8801712345678",
-  "address": "House 12, Road 5, Dhanmondi, Dhaka",
-  "department": "Computer Science",
-  "batch": "2021",
-  "gender": "MALE",
-  "blocked": true,
-  "shift": "Morning",
-  "routeId": null,
-  "routeName": null,
-  "busNo": null,
-  "createdAt": "2024-01-15T10:30:00",
-  "updatedAt": "2024-01-15T15:00:00"
-}
-```
+### 16. Unblock Student (Manager Only)
+**Method:** `PATCH`  
+**URL:** `{{base_url}}/api/v1/students/CSE-2021-001/unblock`  
+**Auth Type:** `Bearer Token`
 
 ---
 
-### 14. Unblock Student
-**Endpoint:** `PATCH /students/CSE-2021-001/unblock`
+### 17. Change Password
+**Method:** `PATCH`  
+**URL:** `{{base_url}}/api/v1/students/CSE-2021-001/change-password`  
+**Auth Type:** `Bearer Token`
 
-**Success Response (200 OK):**
-```json
-{
-  "id": 1,
-  "studentId": "CSE-2021-001",
-  "name": "John Doe",
-  "email": "john.doe@example.com",
-  "phoneNumber": "+8801712345678",
-  "address": "House 12, Road 5, Dhanmondi, Dhaka",
-  "department": "Computer Science",
-  "batch": "2021",
-  "gender": "MALE",
-  "blocked": false,
-  "shift": "Morning",
-  "routeId": null,
-  "routeName": null,
-  "busNo": null,
-  "createdAt": "2024-01-15T10:30:00",
-  "updatedAt": "2024-01-15T16:20:00"
-}
-```
+**Headers:**
+| Key | Value |
+|-----|-------|
+| Content-Type | application/json |
 
----
-
-### 15. Change Password
-**Endpoint:** `PATCH /students/CSE-2021-001/change-password`
-
-**Request Body:**
+**Body (raw JSON):**
 ```json
 {
   "oldPassword": "Pass@1234",
@@ -439,23 +257,28 @@ http://localhost:8080/auth/register/student \
 }
 ```
 
-**Success Response (200 OK):** No content
+---
+
+### 18. Delete Student (Manager Only)
+**Method:** `DELETE`  
+**URL:** `{{base_url}}/api/v1/students/CSE-2021-001`  
+**Auth Type:** `Bearer Token`
 
 ---
 
-### 16. Delete Student
-**Endpoint:** `DELETE /students/CSE-2021-001`
+## 🚌 Route APIs (Require JWT Token - Manager Only)
 
-**Success Response (204 No Content):** No content
+### 19. Create Route
+**Method:** `POST`  
+**URL:** `{{base_url}}/api/v1/routes`  
+**Auth Type:** `Bearer Token`
 
----
+**Headers:**
+| Key | Value |
+|-----|-------|
+| Content-Type | application/json |
 
-## 🚌 Route APIs
-
-### 17. Create Route
-**Endpoint:** `POST /routes`
-
-**Request Body:**
+**Body (raw JSON):**
 ```json
 {
   "busNo": "BUS-01",
@@ -467,280 +290,62 @@ http://localhost:8080/auth/register/student \
       "placeDetails": "In front of Gulshan Circle 1",
       "pickupTime": "07:30",
       "stopOrder": 1
-    },
-    {
-      "placeName": "Banani",
-      "placeDetails": "Banani Railway Station",
-      "pickupTime": "07:45",
-      "stopOrder": 2
-    },
-    {
-      "placeName": "Farmgate",
-      "placeDetails": "Farmgate Bus Stop",
-      "pickupTime": "08:00",
-      "stopOrder": 3
-    },
-    {
-      "placeName": "Shahbag",
-      "placeDetails": "Shahbag Metro Station",
-      "pickupTime": "08:15",
-      "stopOrder": 4
-    },
-    {
-      "placeName": "GUB",
-      "placeDetails": "GUB Main Gate",
-      "pickupTime": "08:30",
-      "stopOrder": 5
     }
   ],
   "operatingDays": ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY"]
 }
 ```
 
-**Success Response (201 Created):**
-```json
-{
-  "id": 1,
-  "busNo": "BUS-01",
-  "routeName": "Gulshan - GUB",
-  "routeLine": "Gulshan 1 → Banani → Farmgate → Shahbag → GUB",
-  "status": "ACTIVE",
-  "pickupPoints": [
-    {
-      "id": 1,
-      "placeName": "Gulshan 1",
-      "placeDetails": "In front of Gulshan Circle 1",
-      "pickupTime": "07:30:00",
-      "stopOrder": 1
-    },
-    {
-      "id": 2,
-      "placeName": "Banani",
-      "placeDetails": "Banani Railway Station",
-      "pickupTime": "07:45:00",
-      "stopOrder": 2
-    },
-    {
-      "id": 3,
-      "placeName": "Farmgate",
-      "placeDetails": "Farmgate Bus Stop",
-      "pickupTime": "08:00:00",
-      "stopOrder": 3
-    },
-    {
-      "id": 4,
-      "placeName": "Shahbag",
-      "placeDetails": "Shahbag Metro Station",
-      "pickupTime": "08:15:00",
-      "stopOrder": 4
-    },
-    {
-      "id": 5,
-      "placeName": "GUB",
-      "placeDetails": "GUB Main Gate",
-      "pickupTime": "08:30:00",
-      "stopOrder": 5
-    }
-  ],
-  "operatingDays": ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY"],
-  "createdAt": "2024-01-15T10:30:00",
-  "updatedAt": "2024-01-15T10:30:00"
-}
-```
+---
+
+### 20. Get All Routes
+**Method:** `GET`  
+**URL:** `{{base_url}}/api/v1/routes`  
+**Auth Type:** `Bearer Token`
 
 ---
 
-### 18. Get All Routes
-**Endpoint:** `GET /routes`
-
-**Success Response (200 OK):**
-```json
-[
-  {
-    "id": 1,
-    "busNo": "BUS-01",
-    "routeName": "Gulshan - GUB",
-    "routeLine": "Gulshan 1 → Banani → Farmgate → Shahbag → GUB",
-    "status": "ACTIVE",
-    "pickupPoints": [
-      {
-        "id": 1,
-        "placeName": "Gulshan 1",
-        "placeDetails": "In front of Gulshan Circle 1",
-        "pickupTime": "07:30:00",
-        "stopOrder": 1
-      }
-    ],
-    "operatingDays": ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY"],
-    "createdAt": "2024-01-15T10:30:00",
-    "updatedAt": "2024-01-15T10:30:00"
-  },
-  {
-    "id": 2,
-    "busNo": "BUS-02",
-    "routeName": "Mirpur - GUB",
-    "routeLine": "Mirpur 10 → Kallyanpur → Shyamoli → Asad Gate → GUB",
-    "status": "ACTIVE",
-    "pickupPoints": [
-      {
-        "id": 6,
-        "placeName": "Mirpur 10",
-        "placeDetails": "Mirpur 10 Bus Stop",
-        "pickupTime": "07:15:00",
-        "stopOrder": 1
-      }
-    ],
-    "operatingDays": ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY"],
-    "createdAt": "2024-01-15T11:00:00",
-    "updatedAt": "2024-01-15T11:00:00"
-  }
-]
-```
+### 21. Get Route by ID
+**Method:** `GET`  
+**URL:** `{{base_url}}/api/v1/routes/1`  
+**Auth Type:** `Bearer Token`
 
 ---
 
-### 19. Get Route by ID
-**Endpoint:** `GET /routes/1`
-
-**Success Response (200 OK):**
-```json
-{
-  "id": 1,
-  "busNo": "BUS-01",
-  "routeName": "Gulshan - GUB",
-  "routeLine": "Gulshan 1 → Banani → Farmgate → Shahbag → GUB",
-  "status": "ACTIVE",
-  "pickupPoints": [
-    {
-      "id": 1,
-      "placeName": "Gulshan 1",
-      "placeDetails": "In front of Gulshan Circle 1",
-      "pickupTime": "07:30:00",
-      "stopOrder": 1
-    },
-    {
-      "id": 2,
-      "placeName": "Banani",
-      "placeDetails": "Banani Railway Station",
-      "pickupTime": "07:45:00",
-      "stopOrder": 2
-    },
-    {
-      "id": 3,
-      "placeName": "Farmgate",
-      "placeDetails": "Farmgate Bus Stop",
-      "pickupTime": "08:00:00",
-      "stopOrder": 3
-    },
-    {
-      "id": 4,
-      "placeName": "Shahbag",
-      "placeDetails": "Shahbag Metro Station",
-      "pickupTime": "08:15:00",
-      "stopOrder": 4
-    },
-    {
-      "id": 5,
-      "placeName": "GUB",
-      "placeDetails": "GUB Main Gate",
-      "pickupTime": "08:30:00",
-      "stopOrder": 5
-    }
-  ],
-  "operatingDays": ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY"],
-  "createdAt": "2024-01-15T10:30:00",
-  "updatedAt": "2024-01-15T10:30:00"
-}
-```
+### 22. Get Route by Bus Number
+**Method:** `GET`  
+**URL:** `{{base_url}}/api/v1/routes/bus/BUS-01`  
+**Auth Type:** `Bearer Token`
 
 ---
 
-### 20. Get Route by Bus Number
-**Endpoint:** `GET /routes/bus/BUS-01`
-
-**Success Response (200 OK):**
-```json
-{
-  "id": 1,
-  "busNo": "BUS-01",
-  "routeName": "Gulshan - GUB",
-  "routeLine": "Gulshan 1 → Banani → Farmgate → Shahbag → GUB",
-  "status": "ACTIVE",
-  "pickupPoints": [
-    {
-      "id": 1,
-      "placeName": "Gulshan 1",
-      "placeDetails": "In front of Gulshan Circle 1",
-      "pickupTime": "07:30:00",
-      "stopOrder": 1
-    }
-  ],
-  "operatingDays": ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY"],
-  "createdAt": "2024-01-15T10:30:00",
-  "updatedAt": "2024-01-15T10:30:00"
-}
-```
+### 23. Update Route Status
+**Method:** `PATCH`  
+**URL:** `{{base_url}}/api/v1/routes/1/status?status=INACTIVE`  
+**Auth Type:** `Bearer Token`
 
 ---
 
-### 21. Get Routes by Day
-**Endpoint:** `GET /routes/day/MONDAY`
-
-**Success Response (200 OK):**
-```json
-[
-  {
-    "id": 1,
-    "busNo": "BUS-01",
-    "routeName": "Gulshan - GUB",
-    "status": "ACTIVE",
-    "operatingDays": ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY"]
-  },
-  {
-    "id": 2,
-    "busNo": "BUS-02",
-    "routeName": "Mirpur - GUB",
-    "status": "ACTIVE",
-    "operatingDays": ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY"]
-  }
-]
-```
+### 24. Delete Route
+**Method:** `DELETE`  
+**URL:** `{{base_url}}/api/v1/routes/1`  
+**Auth Type:** `Bearer Token`
 
 ---
 
-### 22. Update Route Status
-**Endpoint:** `PATCH /routes/1/status?status=INACTIVE`
+## 📅 Routine APIs (Require JWT Token - Manager Only)
 
-**Success Response (200 OK):**
-```json
-{
-  "id": 1,
-  "busNo": "BUS-01",
-  "routeName": "Gulshan - GUB",
-  "routeLine": "Gulshan 1 → Banani → Farmgate → Shahbag → GUB",
-  "status": "INACTIVE",
-  "pickupPoints": [...],
-  "operatingDays": ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY"],
-  "createdAt": "2024-01-15T10:30:00",
-  "updatedAt": "2024-01-15T17:00:00"
-}
-```
+### 25. Create Routine
+**Method:** `POST`  
+**URL:** `{{base_url}}/api/v1/routines`  
+**Auth Type:** `Bearer Token`
 
----
+**Headers:**
+| Key | Value |
+|-----|-------|
+| Content-Type | application/json |
 
-### 23. Delete Route
-**Endpoint:** `DELETE /routes/1`
-
-**Success Response (204 No Content):** No content
-
----
-
-## 📅 Routine APIs
-
-### 24. Create Routine
-**Endpoint:** `POST /routines`
-
-**Request Body:**
+**Body (raw JSON):**
 ```json
 {
   "courseName": "Data Structures",
@@ -757,289 +362,57 @@ http://localhost:8080/auth/register/student \
 }
 ```
 
-**Success Response (201 Created):**
-```json
-{
-  "id": 1,
-  "courseName": "Data Structures",
-  "courseCode": "CSE-2201",
-  "teacherName": "Prof. Rahman",
-  "day": "MONDAY",
-  "startTime": "09:00:00",
-  "endTime": "10:30:00",
-  "roomNumber": "Room 401",
-  "department": "Computer Science",
-  "batch": "2021",
-  "routineType": "CLASS",
-  "active": true,
-  "routeId": 1,
-  "busNo": "BUS-01",
-  "studentCount": 0,
-  "createdAt": "2024-01-15T10:30:00",
-  "updatedAt": "2024-01-15T10:30:00"
-}
-```
-
 ---
 
-### 25. Assign Students to Routine
-**Endpoint:** `POST /routines/1/students`
+### 26. Assign Students to Routine
+**Method:** `POST`  
+**URL:** `{{base_url}}/api/v1/routines/1/students`  
+**Auth Type:** `Bearer Token`
 
-**Request Body:**
+**Headers:**
+| Key | Value |
+|-----|-------|
+| Content-Type | application/json |
+
+**Body (raw JSON):**
 ```json
 [1, 2, 3, 4, 5]
 ```
 
-**Success Response (200 OK):**
-```json
-{
-  "id": 1,
-  "courseName": "Data Structures",
-  "courseCode": "CSE-2201",
-  "teacherName": "Prof. Rahman",
-  "day": "MONDAY",
-  "startTime": "09:00:00",
-  "endTime": "10:30:00",
-  "roomNumber": "Room 401",
-  "department": "Computer Science",
-  "batch": "2021",
-  "routineType": "CLASS",
-  "active": true,
-  "routeId": 1,
-  "busNo": "BUS-01",
-  "studentCount": 5,
-  "createdAt": "2024-01-15T10:30:00",
-  "updatedAt": "2024-01-15T11:15:00"
-}
-```
+---
+
+## 📝 Postman Setup Tips
+
+### 1. Create Environment Variables
+Create a Postman environment with these variables:
+| Variable | Initial Value | Current Value |
+|----------|---------------|---------------|
+| base_url | http://localhost:8080 | http://localhost:8080 |
+| token | | (paste your JWT token here) |
+| student_id | CSE-2021-001 | CSE-2021-001 |
+| route_id | 1 | 1 |
+
+### 2. Set Authorization Globally
+In your Postman collection, go to **Authorization** tab and set:
+- **Type:** `Bearer Token`
+- **Token:** `{{token}}`
+
+This will automatically add the token to all requests in the collection.
+
+### 3. Testing Flow
+1. First register a student or manager
+2. Login to get token
+3. Copy token to environment variable
+4. Test all other endpoints
 
 ---
 
-### 26. Get Routines by Department and Batch
-**Endpoint:** `GET /routines/department/Computer Science/batch/2021`
+## ⚠️ Important Notes
 
-**Success Response (200 OK):**
-```json
-[
-  {
-    "id": 1,
-    "courseName": "Data Structures",
-    "courseCode": "CSE-2201",
-    "teacherName": "Prof. Rahman",
-    "day": "MONDAY",
-    "startTime": "09:00:00",
-    "endTime": "10:30:00",
-    "roomNumber": "Room 401",
-    "department": "Computer Science",
-    "batch": "2021",
-    "routineType": "CLASS",
-    "active": true,
-    "routeId": 1,
-    "busNo": "BUS-01",
-    "studentCount": 5,
-    "createdAt": "2024-01-15T10:30:00",
-    "updatedAt": "2024-01-15T11:15:00"
-  },
-  {
-    "id": 2,
-    "courseName": "Algorithms",
-    "courseCode": "CSE-2203",
-    "teacherName": "Dr. Khan",
-    "day": "WEDNESDAY",
-    "startTime": "11:00:00",
-    "endTime": "12:30:00",
-    "roomNumber": "Room 405",
-    "department": "Computer Science",
-    "batch": "2021",
-    "routineType": "CLASS",
-    "active": true,
-    "routeId": 2,
-    "busNo": "BUS-02",
-    "studentCount": 3,
-    "createdAt": "2024-01-15T11:30:00",
-    "updatedAt": "2024-01-15T11:30:00"
-  }
-]
-```
-
----
-
-### 27. Get Routines by Day
-**Endpoint:** `GET /routines/day/MONDAY`
-
-**Success Response (200 OK):**
-```json
-[
-  {
-    "id": 1,
-    "courseName": "Data Structures",
-    "courseCode": "CSE-2201",
-    "teacherName": "Prof. Rahman",
-    "day": "MONDAY",
-    "startTime": "09:00:00",
-    "endTime": "10:30:00",
-    "roomNumber": "Room 401",
-    "department": "Computer Science",
-    "batch": "2021"
-  },
-  {
-    "id": 3,
-    "courseName": "Digital Logic",
-    "courseCode": "EEE-2101",
-    "teacherName": "Prof. Islam",
-    "day": "MONDAY",
-    "startTime": "14:00:00",
-    "endTime": "15:30:00",
-    "roomNumber": "Room 302",
-    "department": "Electrical Engineering",
-    "batch": "2021"
-  }
-]
-```
-
----
-
-### 28. Get Routines for Student
-**Endpoint:** `GET /routines/student/CSE-2021-001`
-
-**Success Response (200 OK):**
-```json
-[
-  {
-    "id": 1,
-    "courseName": "Data Structures",
-    "courseCode": "CSE-2201",
-    "teacherName": "Prof. Rahman",
-    "day": "MONDAY",
-    "startTime": "09:00:00",
-    "endTime": "10:30:00",
-    "roomNumber": "Room 401",
-    "department": "Computer Science",
-    "batch": "2021",
-    "routineType": "CLASS",
-    "active": true,
-    "routeId": 1,
-    "busNo": "BUS-01",
-    "studentCount": 5
-  }
-]
-```
-
----
-
-### 29. Delete Routine
-**Endpoint:** `DELETE /routines/1`
-
-**Success Response (204 No Content):** No content
-
----
-
-## ❌ Error Responses
-
-### 400 Bad Request
-```json
-{
-  "timestamp": "2024-01-15T10:30:00",
-  "status": 400,
-  "error": "Bad Request",
-  "message": "Validation failed",
-  "errors": [
-    "Student ID is required",
-    "Email must be valid"
-  ],
-  "path": "/api/v1/students/register"
-}
-```
-
-### 404 Not Found
-```json
-{
-  "timestamp": "2024-01-15T10:30:00",
-  "status": 404,
-  "error": "Not Found",
-  "message": "Student not found: CSE-2021-999",
-  "path": "/api/v1/students/CSE-2021-999"
-}
-```
-
-### 409 Conflict
-```json
-{
-  "timestamp": "2024-01-15T10:30:00",
-  "status": 409,
-  "error": "Conflict",
-  "message": "Student ID already exists: CSE-2021-001",
-  "path": "/api/v1/students/register"
-}
-```
-
----
-
-## 📝 Testing with cURL Commands
-
-### Register Student
-```bash
-curl -X POST http://localhost:8080/api/v1/students/register \
-  -H "Content-Type: application/json" \
-  -d '{
-    "studentId": "CSE-2021-001",
-    "name": "John Doe",
-    "email": "john.doe@example.com",
-    "phoneNumber": "+8801712345678",
-    "address": "House 12, Road 5, Dhanmondi, Dhaka",
-    "department": "Computer Science",
-    "batch": "2021",
-    "gender": "MALE",
-    "shift": "Morning",
-    "password": "Pass@1234"
-  }'
-```
-
-### Create Route
-```bash
-curl -X POST http://localhost:8080/api/v1/routes \
-  -H "Content-Type: application/json" \
-  -d '{
-    "busNo": "BUS-01",
-    "routeName": "Gulshan - GUB",
-    "routeLine": "Gulshan 1 → Banani → Farmgate → Shahbag → GUB",
-    "pickupPoints": [
-      {
-        "placeName": "Gulshan 1",
-        "placeDetails": "In front of Gulshan Circle 1",
-        "pickupTime": "07:30",
-        "stopOrder": 1
-      }
-    ],
-    "operatingDays": ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY"]
-  }'
-```
-
-### Create Routine
-```bash
-curl -X POST http://localhost:8080/api/v1/routines \
-  -H "Content-Type: application/json" \
-  -d '{
-    "courseName": "Data Structures",
-    "courseCode": "CSE-2201",
-    "teacherName": "Prof. Rahman",
-    "day": "MONDAY",
-    "startTime": "09:00:00",
-    "endTime": "10:30:00",
-    "roomNumber": "Room 401",
-    "department": "Computer Science",
-    "batch": "2021",
-    "routineType": "CLASS",
-    "routeId": 1
-  }'
-```
-
-### Assign Route to Student
-```bash
-curl -X PATCH http://localhost:8080/api/v1/students/CSE-2021-001/assign-route/1
-```
-
-### Get Student's Routines
-```bash
-curl -X GET http://localhost:8080/api/v1/students/CSE-2021-001/routines
-```
+- **Registration endpoints** (`/auth/register/*`) do NOT require authentication
+- **Login endpoint** (`/auth/authenticate`) does NOT require authentication
+- **All other endpoints** require a valid JWT token
+- Students can only access/modify their own data
+- Managers can access/modify all data
+- Always include `Content-Type: application/json` header for POST/PUT/PATCH requests
+- The token expires after 24 hours (86400000 ms)

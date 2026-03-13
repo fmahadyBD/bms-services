@@ -2,7 +2,6 @@ package com.fmahadybd.bms_services.auth.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -12,15 +11,15 @@ import com.fmahadybd.bms_services.auth.dto.ManagerRegistrationRequest;
 import com.fmahadybd.bms_services.auth.dto.RegisterStudentRequest;
 import com.fmahadybd.bms_services.auth.service.AuthenticationService;
 
-@RestController 
-@RequestMapping("auth") 
-@RequiredArgsConstructor 
+@RestController
+@RequestMapping("auth")
+@RequiredArgsConstructor
 public class AuthenticationController {
 
     private final AuthenticationService service;
 
+    // FIX: removed @ResponseStatus — ResponseEntity already sets the status
     @PostMapping("/register/student")
-    @ResponseStatus(HttpStatus.ACCEPTED)
     public ResponseEntity<?> registerStudent(
             @RequestBody @Valid RegisterStudentRequest request
     ) {
@@ -29,7 +28,6 @@ public class AuthenticationController {
     }
 
     @PostMapping("/register/manager")
-    @ResponseStatus(HttpStatus.ACCEPTED)
     public ResponseEntity<?> registerManager(
             @RequestBody @Valid ManagerRegistrationRequest request
     ) {

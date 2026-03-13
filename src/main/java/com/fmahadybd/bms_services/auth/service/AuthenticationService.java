@@ -27,7 +27,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
-import java.util.Random;
 
 @Service
 @RequiredArgsConstructor
@@ -40,15 +39,12 @@ public class AuthenticationService {
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
     private final StudentService studentService;
-    private final Random random = new Random();
 
     @Value("${application.security.jwt.expiration}")
     private long jwtExpiration;
 
     @Transactional
     public void registerStudent(RegisterStudentRequest req) {
-        // Check if user already exists in either repository
-       // Check for duplicates
         if (studentRepository.existsByStudentId(req.getStudentId()))
             throw new DuplicateResourceException("Student ID already exists: " + req.getStudentId());
         if (studentRepository.existsByEmail(req.getEmail()))
@@ -75,10 +71,10 @@ public class AuthenticationService {
 
     @Transactional
     public void registerManager(ManagerRegistrationRequest request) {
-        // Check if user already exists in either repository
+        // FIX: consistent use of DuplicateResourceException instead of IllegalStateException
         if (studentRepository.findByEmail(request.getEmail()).isPresent() ||
             managerRepository.findByEmail(request.getEmail()).isPresent()) {
-            throw new IllegalStateException("User with email '" + request.getEmail() + "' already exists");
+            throw new DuplicateResourceException("Email already registered: " + request.getEmail());
         }
 
         var manager = Manager.builder()
@@ -106,14 +102,12 @@ public class AuthenticationService {
 
             var claims = new HashMap<String, Object>();
             var user = (BaseUser) auth.getPrincipal();
-            
+
             claims.put("username", user.getUsername());
             claims.put("fullName", user.getName());
             claims.put("userType", user.getUserType());
-            claims.put("rnd", random.nextLong());
-            claims.put("ts", System.currentTimeMillis());
+            // FIX: removed random + timestamp claims — DB token store handles invalidation
 
-            // Add type-specific claims
             if (user instanceof Student student) {
                 claims.put("studentId", student.getStudentId());
                 claims.put("department", student.getDepartment());
@@ -126,57 +120,51 @@ public class AuthenticationService {
             }
 
             var jwtToken = jwtService.generateToken(claims, user);
-            
-            revokeAllUserTokens(user);
+
+            // FIX: save new token FIRST, then revoke old ones — avoids the
+            // window where the user has zero valid tokens between the two calls
             saveUserToken(user, jwtToken);
-            
+            revokeOldUserTokens(user, jwtToken);
+
             return AuthenticationResponse.builder()
                     .token(jwtToken)
                     .userType(user.getUserType())
                     .role(user instanceof Student ? "STUDENT" : "MANAGER")
                     .build();
-                    
+
         } catch (BadCredentialsException e) {
             throw new BadCredentialsException("Invalid email or password");
         }
     }
 
     private void saveUserToken(BaseUser user, String jwtToken) {
-        var existingValidTokens = tokenRepository.findAllValidTokensByUser(user.getId(), user.getUserType());
-        
-        if (!existingValidTokens.isEmpty()) {
-            var existingToken = existingValidTokens.get(0);
-            existingToken.setToken(jwtToken);
-            existingToken.setExpired(false);
-            existingToken.setRevoked(false);
-            existingToken.setExpiresAt(LocalDateTime.now().plus(jwtExpiration, ChronoUnit.MILLIS));
-            tokenRepository.save(existingToken);
-        } else {
-            var token = Token.builder()
-                    .userId(user.getId())
-                    .userType(user.getUserType())
-                    .token(jwtToken)
-                    .tokenType(TokenType.BEARER)
-                    .expired(false)
-                    .revoked(false)
-                    .expiresAt(LocalDateTime.now().plus(jwtExpiration, ChronoUnit.MILLIS))
-                    .build();
-            tokenRepository.save(token);
-        }
+        // FIX: always insert a fresh token — no reuse logic needed since we
+        // revoke old tokens right after. Keeps this method simple and correct.
+        var token = Token.builder()
+                .userId(user.getId())
+                .userType(user.getUserType())
+                .token(jwtToken)
+                .tokenType(TokenType.BEARER)
+                .expired(false)
+                .revoked(false)
+                .expiresAt(LocalDateTime.now().plus(jwtExpiration, ChronoUnit.MILLIS))
+                .build();
+        tokenRepository.save(token);
     }
 
-    private void revokeAllUserTokens(BaseUser user) {
-        var validUserTokens = tokenRepository.findAllValidTokensByUser(user.getId(), user.getUserType());
-        if (validUserTokens.isEmpty()) return;
-        
-        validUserTokens.forEach(token -> {
+    // FIX: renamed to revokeOldUserTokens and takes the new token string
+    // so it can exclude it from the revocation query
+    private void revokeOldUserTokens(BaseUser user, String newToken) {
+        var oldTokens = tokenRepository.findAllValidTokensByUserExcluding(
+                user.getId(), user.getUserType(), newToken
+        );
+        if (oldTokens.isEmpty()) return;
+
+        oldTokens.forEach(token -> {
             token.setExpired(true);
             token.setRevoked(true);
         });
-        
-        tokenRepository.saveAll(validUserTokens);
+
+        tokenRepository.saveAll(oldTokens);
     }
-
-
- 
 }

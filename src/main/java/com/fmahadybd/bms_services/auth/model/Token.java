@@ -19,8 +19,7 @@ public class Token {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-    @Column(unique = true)
+    @Column(unique = true, columnDefinition = "TEXT") // TEXT handles up to 65,535 bytes — no length limit needed
     private String token;
 
     @Enumerated(EnumType.STRING)
