@@ -7,13 +7,13 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.fmahadybd.bms_services.auth.dto.RegisterStudentRequest;
 import com.fmahadybd.bms_services.exception.DuplicateResourceException;
 import com.fmahadybd.bms_services.exception.ResourceNotFoundException;
 import com.fmahadybd.bms_services.route.model.Route;
 import com.fmahadybd.bms_services.route.repository.RouteRepository;
 import com.fmahadybd.bms_services.routine.model.ClassRoutine;
 import com.fmahadybd.bms_services.routine.repository.RoutineRepository;
-import com.fmahadybd.bms_services.student.dto.RegisterStudentRequest;
 import com.fmahadybd.bms_services.student.dto.StudentResponse;
 import com.fmahadybd.bms_services.student.dto.StudentRoutineResponse;
 import com.fmahadybd.bms_services.student.dto.UpdateStudentRequest;
@@ -31,34 +31,10 @@ public class StudentService {
     private final RoutineRepository routineRepository;
     private final PasswordEncoder passwordEncoder;
 
-    // ── Register Student ────────────────────────────────────────────────
-    @Transactional
-    public StudentResponse register(RegisterStudentRequest req) {
-        // Check for duplicates
-        if (studentRepository.existsByStudentId(req.getStudentId()))
-            throw new DuplicateResourceException("Student ID already exists: " + req.getStudentId());
-        if (studentRepository.existsByEmail(req.getEmail()))
-            throw new DuplicateResourceException("Email already registered: " + req.getEmail());
-        if (studentRepository.existsByPhoneNumber(req.getPhoneNumber()))
-            throw new DuplicateResourceException("Phone number already registered: " + req.getPhoneNumber());
 
-        Student student = Student.builder()
-                .studentId(req.getStudentId())
-                .name(req.getName())
-                .email(req.getEmail())
-                .phoneNumber(req.getPhoneNumber())
-                .address(req.getAddress())
-                .department(req.getDepartment())
-                .batch(req.getBatch())
-                .gender(req.getGender())
-                .shift(req.getShift())
-                .isBlocked(false)
-                .password(passwordEncoder.encode(req.getPassword()))
-                .build();
 
-        return toResponse(studentRepository.save(student));
-    }
 
+    
     // ── Find by Student ID ───────────────────────────────────────────────
     public StudentResponse findByStudentId(String studentId) {
         return toResponse(getStudentOrThrow(studentId));

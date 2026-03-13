@@ -9,8 +9,8 @@ import org.springframework.web.bind.annotation.*;
 import com.fmahadybd.bms_services.auth.dto.AuthenticationRequest;
 import com.fmahadybd.bms_services.auth.dto.AuthenticationResponse;
 import com.fmahadybd.bms_services.auth.dto.ManagerRegistrationRequest;
+import com.fmahadybd.bms_services.auth.dto.RegisterStudentRequest;
 import com.fmahadybd.bms_services.auth.service.AuthenticationService;
-import com.fmahadybd.bms_services.student.dto.RegisterStudentRequest;
 
 @RestController 
 @RequestMapping("auth") 

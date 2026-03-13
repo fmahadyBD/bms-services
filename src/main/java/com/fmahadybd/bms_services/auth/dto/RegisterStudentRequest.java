@@ -1,4 +1,4 @@
-package com.fmahadybd.bms_services.student.dto;
+package com.fmahadybd.bms_services.auth.dto;
 
 import com.fmahadybd.bms_services.enums.GENDER;
 import jakarta.validation.constraints.*;

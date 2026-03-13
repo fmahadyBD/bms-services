@@ -4,13 +4,14 @@ import com.fmahadybd.bms_services.auth.BaseUser;
 import com.fmahadybd.bms_services.auth.dto.AuthenticationRequest;
 import com.fmahadybd.bms_services.auth.dto.AuthenticationResponse;
 import com.fmahadybd.bms_services.auth.dto.ManagerRegistrationRequest;
+import com.fmahadybd.bms_services.auth.dto.RegisterStudentRequest;
 import com.fmahadybd.bms_services.auth.model.Token;
 import com.fmahadybd.bms_services.auth.model.TokenType;
 import com.fmahadybd.bms_services.auth.repository.TokenRepository;
 import com.fmahadybd.bms_services.auth.security.JwtService;
+import com.fmahadybd.bms_services.exception.DuplicateResourceException;
 import com.fmahadybd.bms_services.manager.model.Manager;
 import com.fmahadybd.bms_services.manager.repository.ManagerRepository;
-import com.fmahadybd.bms_services.student.dto.RegisterStudentRequest;
 import com.fmahadybd.bms_services.student.model.Student;
 import com.fmahadybd.bms_services.student.repository.StudentRepository;
 import com.fmahadybd.bms_services.student.service.StudentService;
@@ -45,15 +46,31 @@ public class AuthenticationService {
     private long jwtExpiration;
 
     @Transactional
-    public void registerStudent(RegisterStudentRequest request) {
+    public void registerStudent(RegisterStudentRequest req) {
         // Check if user already exists in either repository
-        if (studentRepository.findByEmail(request.getEmail()).isPresent() ||
-            managerRepository.findByEmail(request.getEmail()).isPresent()) {
-            throw new IllegalStateException("User with email '" + request.getEmail() + "' already exists");
-        }
+       // Check for duplicates
+        if (studentRepository.existsByStudentId(req.getStudentId()))
+            throw new DuplicateResourceException("Student ID already exists: " + req.getStudentId());
+        if (studentRepository.existsByEmail(req.getEmail()))
+            throw new DuplicateResourceException("Email already registered: " + req.getEmail());
+        if (studentRepository.existsByPhoneNumber(req.getPhoneNumber()))
+            throw new DuplicateResourceException("Phone number already registered: " + req.getPhoneNumber());
 
-        // Use the StudentService to register
-        studentService.register(request);
+        Student student = Student.builder()
+                .studentId(req.getStudentId())
+                .name(req.getName())
+                .email(req.getEmail())
+                .phoneNumber(req.getPhoneNumber())
+                .address(req.getAddress())
+                .department(req.getDepartment())
+                .batch(req.getBatch())
+                .gender(req.getGender())
+                .shift(req.getShift())
+                .isBlocked(false)
+                .password(passwordEncoder.encode(req.getPassword()))
+                .build();
+
+        studentRepository.save(student);
     }
 
     @Transactional
@@ -159,4 +176,7 @@ public class AuthenticationService {
         
         tokenRepository.saveAll(validUserTokens);
     }
+
+
+ 
 }
