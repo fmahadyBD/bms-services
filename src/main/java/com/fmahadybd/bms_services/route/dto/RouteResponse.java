@@ -1,4 +1,3 @@
-
 package com.fmahadybd.bms_services.route.dto;
 
 import com.fmahadybd.bms_services.enums.DAY;
