@@ -22,11 +22,13 @@ public class BusRequestRequest {
     private Long pickupPointId;
 
     @NotNull(message = "Request from date is required")
-    @FutureOrPresent(message = "Request from date must be present or future")
+    // Remove @FutureOrPresent if you want to allow past dates
+    // Or keep it and use future dates
     private LocalDate requestedFrom;
 
     @NotNull(message = "Request to date is required")
-    @Future(message = "Request to date must be future")
+    // Remove @Future if you want to allow past dates
+    // Or keep it and use future dates
     private LocalDate requestedTo;
 
     @Size(max = 500, message = "Reason cannot exceed 500 characters")
