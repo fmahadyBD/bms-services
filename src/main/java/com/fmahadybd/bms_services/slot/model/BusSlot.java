@@ -1,5 +1,6 @@
 package com.fmahadybd.bms_services.slot.model;
 
+import com.fmahadybd.bms_services.bus.model.Bus;
 import com.fmahadybd.bms_services.route.model.Route;
 import com.fmahadybd.bms_services.slot.emnus.BUS_SLOT_STATUS;
 import jakarta.persistence.*;
@@ -13,6 +14,7 @@ import java.time.LocalTime;
 @Entity
 @Table(name = "bus_slots", indexes = {
     @Index(name = "idx_bus_slot_route", columnList = "route_id"),
+    @Index(name = "idx_bus_slot_bus", columnList = "bus_id"),
     @Index(name = "idx_bus_slot_status", columnList = "status"),
     @Index(name = "idx_bus_slot_time", columnList = "pickup_time")
 })
@@ -30,6 +32,10 @@ public class BusSlot {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "route_id", nullable = false)
     private Route route;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "bus_id")
+    private Bus bus;
 
     @Column(nullable = false, length = 100)
     private String slotName;

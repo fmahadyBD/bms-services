@@ -1,7 +1,8 @@
-
 package com.fmahadybd.bms_services.route.model;
 
+import com.fmahadybd.bms_services.bus.model.Bus;
 import com.fmahadybd.bms_services.enums.ROUTE_STATUS;
+import com.fmahadybd.bms_services.slot.model.BusSlot;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -26,13 +27,13 @@ public class Route {
     private Long id;
 
     @Column(nullable = false, unique = true, length = 20)
-    private String busNo;           // e.g. "BUS-01", "BUS-12"
+    private String busNo;
 
     @Column(nullable = false, length = 100)
-    private String routeName;       // e.g. "Mirpur - BUET"
+    private String routeName;
 
     @Column(nullable = false, length = 255)
-    private String routeLine;       // e.g. "Mirpur 10 → Farmgate → Shahbag → BUET"
+    private String routeLine;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -46,6 +47,14 @@ public class Route {
     // ── Operating Days (One Route → Many Days) ────────────────────────────
     @OneToMany(mappedBy = "route", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<RouteDay> operatingDays;
+
+    // ── Buses assigned to this route (One Route → Many Buses) ─────────────
+    @OneToMany(mappedBy = "route", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<Bus> buses;
+
+    // ── Bus Slots for this route (One Route → Many Slots) ─────────────────
+    @OneToMany(mappedBy = "route", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<BusSlot> busSlots;
 
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
