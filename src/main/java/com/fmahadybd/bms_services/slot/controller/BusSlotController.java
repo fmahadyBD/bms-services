@@ -1,14 +1,11 @@
 package com.fmahadybd.bms_services.slot.controller;
 
-
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import com.fmahadybd.bms_services.slot.dto.BusSlotBookingUpdateRequest;
 import com.fmahadybd.bms_services.slot.dto.BusSlotFilterRequest;
 import com.fmahadybd.bms_services.slot.dto.BusSlotRequest;
 import com.fmahadybd.bms_services.slot.dto.BusSlotResponse;
@@ -16,12 +13,11 @@ import com.fmahadybd.bms_services.slot.dto.BusSlotStatistics;
 import com.fmahadybd.bms_services.slot.dto.BusSlotStatusUpdateRequest;
 import com.fmahadybd.bms_services.slot.emnus.BUS_SLOT_STATUS;
 import com.fmahadybd.bms_services.slot.services.BusSlotService;
-
 import java.time.LocalTime;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1/bus-slots/")
+@RequestMapping("/api/v1/bus-slots")
 @RequiredArgsConstructor
 public class BusSlotController {
 
@@ -65,11 +61,6 @@ public class BusSlotController {
         return ResponseEntity.ok(busSlotService.getSlotsByStatus(status));
     }
 
-    @GetMapping("/available")
-    public ResponseEntity<List<BusSlotResponse>> getAvailableSlots() {
-        return ResponseEntity.ok(busSlotService.getAvailableSlots());
-    }
-
     @GetMapping("/time-range")
     public ResponseEntity<List<BusSlotResponse>> getSlotsByTimeRange(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.TIME) LocalTime fromTime,
@@ -91,13 +82,6 @@ public class BusSlotController {
             @Valid @RequestBody BusSlotStatusUpdateRequest statusUpdate) {
         Long managerId = 1L;
         return ResponseEntity.ok(busSlotService.updateSlotStatus(id, statusUpdate, managerId));
-    }
-
-    @PatchMapping("/{id}/bookings")
-    public ResponseEntity<BusSlotResponse> updateBookingCount(
-            @PathVariable Long id,
-            @Valid @RequestBody BusSlotBookingUpdateRequest bookingUpdate) {
-        return ResponseEntity.ok(busSlotService.updateBookingCount(id, bookingUpdate));
     }
 
     @DeleteMapping("/{id}")

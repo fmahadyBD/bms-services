@@ -1,10 +1,7 @@
 package com.fmahadybd.bms_services.slot.dto;
 
-
 import lombok.*;
-
 import java.time.LocalTime;
-
 import com.fmahadybd.bms_services.slot.emnus.BUS_SLOT_STATUS;
 
 @Getter
@@ -14,10 +11,8 @@ import com.fmahadybd.bms_services.slot.emnus.BUS_SLOT_STATUS;
 @Builder
 public class BusSlotFilterRequest {
     private Long routeId;
-    private Long pickupPointId;
     private BUS_SLOT_STATUS status;
     private LocalTime fromTime;
     private LocalTime toTime;
-    private Boolean isAvailable;
-    private Boolean isRecurring;
+    private Boolean isRegular;
 }

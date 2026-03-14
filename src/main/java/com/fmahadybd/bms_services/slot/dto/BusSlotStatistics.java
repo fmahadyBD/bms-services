@@ -10,10 +10,6 @@ public class BusSlotStatistics {
     private long activeSlots;
     private long inactiveSlots;
     private long fullSlots;
-    private long recurringSlots;
-    private long totalCapacity;
-    private long totalBookings;
-    private long availableSeats;
-    private double averageFare;
+    private long regularSlots;
     private long slotsByRoute;
 }

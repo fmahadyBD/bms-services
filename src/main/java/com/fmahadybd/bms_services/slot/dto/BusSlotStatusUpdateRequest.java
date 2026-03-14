@@ -1,8 +1,6 @@
 package com.fmahadybd.bms_services.slot.dto;
 
-
 import com.fmahadybd.bms_services.slot.emnus.BUS_SLOT_STATUS;
-
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
