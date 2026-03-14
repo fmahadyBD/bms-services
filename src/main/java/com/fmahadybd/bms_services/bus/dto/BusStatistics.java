@@ -13,4 +13,5 @@ public class BusStatistics {
     private long onTripBuses;
     private long outOfServiceBuses;
     private long busesByRoute;
+    private long availableBuses;  
 }

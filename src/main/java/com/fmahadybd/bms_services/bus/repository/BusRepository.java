@@ -30,10 +30,17 @@ public interface BusRepository extends JpaRepository<Bus, Long> {
     @Query("SELECT b FROM Bus b WHERE b.route.id = :routeId AND b.status = 'ACTIVE'")
     List<Bus> findActiveBusesByRoute(@Param("routeId") Long routeId);
 
+    @Query("SELECT b FROM Bus b WHERE b.status NOT IN ('OUT_OF_SERVICE', 'MAINTENANCE')")
+    List<Bus> findAvailableBuses();
+
     long countByStatus(BUS_STATUS status);
 
     long countByRouteId(Long routeId);
 
     @Query("SELECT COUNT(b) FROM Bus b WHERE b.route.id = :routeId AND b.status = :status")
     long countByRouteIdAndStatus(@Param("routeId") Long routeId, @Param("status") BUS_STATUS status);
+
+    // Add this method - it was missing
+    @Query("SELECT COUNT(b) FROM Bus b WHERE b.status IN ('ACTIVE', 'ON_TRIP')")
+    long countAvailableBuses();
 }
