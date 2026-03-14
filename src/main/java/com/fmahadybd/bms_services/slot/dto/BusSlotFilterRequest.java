@@ -11,6 +11,7 @@ import com.fmahadybd.bms_services.slot.emnus.BUS_SLOT_STATUS;
 @Builder
 public class BusSlotFilterRequest {
     private Long routeId;
+    private Long busId;  // New field
     private BUS_SLOT_STATUS status;
     private LocalTime fromTime;
     private LocalTime toTime;

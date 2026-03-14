@@ -1,11 +1,15 @@
 
 
-## 1. Create a New Route
+## Route API Testing Commands
+
+### 1. Create Routes
+
 ```bash
+# Create Route 1: Mirpur - Motijheel (Weekday Service)
 curl -X POST http://localhost:8080/api/v1/routes \
   -H "Content-Type: application/json" \
   -d '{
-    "busNo": "BUS-01",
+    "busNo": "BUS-001",
     "routeName": "Mirpur - Motijheel",
     "routeLine": "Mirpur 10 → Farmgate → Shahbag → Motijheel",
     "operatingDays": ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY"],
@@ -38,12 +42,12 @@ curl -X POST http://localhost:8080/api/v1/routes \
   }'
 ```
 
-## 2. Create Another Route (Different Bus)
 ```bash
+# Create Route 2: Uttara - Gulshan (Alternate Days)
 curl -X POST http://localhost:8080/api/v1/routes \
   -H "Content-Type: application/json" \
   -d '{
-    "busNo": "BUS-02",
+    "busNo": "BUS-002",
     "routeName": "Uttara - Gulshan",
     "routeLine": "Uttara → Banani → Gulshan",
     "operatingDays": ["MONDAY", "WEDNESDAY", "FRIDAY"],
@@ -70,12 +74,12 @@ curl -X POST http://localhost:8080/api/v1/routes \
   }'
 ```
 
-## 3. Create Route with Weekend Only Service
 ```bash
+# Create Route 3: Dhanmondi - Motijheel (Weekend Service)
 curl -X POST http://localhost:8080/api/v1/routes \
   -H "Content-Type: application/json" \
   -d '{
-    "busNo": "BUS-03",
+    "busNo": "BUS-003",
     "routeName": "Dhanmondi - Motijheel",
     "routeLine": "Dhanmondi 32 → Science Lab → Motijheel",
     "operatingDays": ["SATURDAY", "SUNDAY"],
@@ -102,123 +106,319 @@ curl -X POST http://localhost:8080/api/v1/routes \
   }'
 ```
 
-## 4. Get All Routes
+```bash
+# Create Route 4: Airport - Banani (Express Service)
+curl -X POST http://localhost:8080/api/v1/routes \
+  -H "Content-Type: application/json" \
+  -d '{
+    "busNo": "BUS-004",
+    "routeName": "Airport - Banani Express",
+    "routeLine": "Airport → Khilkhet → Banani",
+    "operatingDays": ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY"],
+    "pickupPoints": [
+      {
+        "placeName": "Airport",
+        "placeDetails": "Hazrat Shahjalal International Airport",
+        "pickupTime": "06:00",
+        "stopOrder": 1
+      },
+      {
+        "placeName": "Khilkhet",
+        "placeDetails": "Khilkhet Bus Stop",
+        "pickupTime": "06:20",
+        "stopOrder": 2
+      },
+      {
+        "placeName": "Banani",
+        "placeDetails": "Banani Bus Stand",
+        "pickupTime": "06:45",
+        "stopOrder": 3
+      }
+    ]
+  }'
+```
+
+### 2. Get All Routes
 ```bash
 curl -X GET http://localhost:8080/api/v1/routes
 ```
 
-## 5. Get Route by ID
+### 3. Get Route by ID
 ```bash
 curl -X GET http://localhost:8080/api/v1/routes/1
+curl -X GET http://localhost:8080/api/v1/routes/2
+curl -X GET http://localhost:8080/api/v1/routes/3
 ```
 
-## 6. Get Route by Bus Number
+### 4. Get Route by Bus Number
 ```bash
-curl -X GET http://localhost:8080/api/v1/routes/bus/BUS-01
+curl -X GET http://localhost:8080/api/v1/routes/bus/BUS-001
+curl -X GET http://localhost:8080/api/v1/routes/bus/BUS-002
+curl -X GET http://localhost:8080/api/v1/routes/bus/BUS-003
 ```
 
-## 7. Get Routes by Operating Day
+### 5. Get Routes by Operating Day
 ```bash
-# Get routes operating on MONDAY
+# Monday routes
 curl -X GET http://localhost:8080/api/v1/routes/day/MONDAY
 
-# Get routes operating on SATURDAY
+# Friday routes
+curl -X GET http://localhost:8080/api/v1/routes/day/FRIDAY
+
+# Saturday routes
 curl -X GET http://localhost:8080/api/v1/routes/day/SATURDAY
+
+# Sunday routes
+curl -X GET http://localhost:8080/api/v1/routes/day/SUNDAY
 ```
 
-## 8. Update Route Status
+### 6. Get Routes by Status
 ```bash
-# Set to INACTIVE
+# Get all ACTIVE routes
+curl -X GET "http://localhost:8080/api/v1/routes/status/ACTIVE"
+
+# Get all INACTIVE routes
+curl -X GET "http://localhost:8080/api/v1/routes/status/INACTIVE"
+
+# Get all MAINTENANCE routes
+curl -X GET "http://localhost:8080/api/v1/routes/status/MAINTENANCE"
+```
+
+### 7. Update Route Status
+```bash
+# Set Route 1 to INACTIVE
 curl -X PATCH "http://localhost:8080/api/v1/routes/1/status?status=INACTIVE"
 
-# Set back to ACTIVE
-curl -X PATCH "http://localhost:8080/api/v1/routes/1/status?status=ACTIVE"
-
-# Set to MAINTENANCE
+# Set Route 2 to MAINTENANCE
 curl -X PATCH "http://localhost:8080/api/v1/routes/2/status?status=MAINTENANCE"
+
+# Set Route 3 back to ACTIVE
+curl -X PATCH "http://localhost:8080/api/v1/routes/3/status?status=ACTIVE"
 ```
 
-## 9. Delete a Route
+### 8. Full Update (PUT) - Replace Entire Route
 ```bash
-curl -X DELETE http://localhost:8080/api/v1/routes/3
-```
-
-## Additional Test Scenarios
-
-### 10. Try Creating Route with Invalid Bus Number Format
-```bash
-curl -X POST http://localhost:8080/api/v1/routes \
+curl -X PUT http://localhost:8080/api/v1/routes/1 \
   -H "Content-Type: application/json" \
   -d '{
-    "busNo": "12345",
-    "routeName": "Test Route",
-    "routeLine": "Test → Route",
-    "operatingDays": ["MONDAY"],
+    "busNo": "BUS-001-UPDATED",
+    "routeName": "Mirpur - Motijheel (Updated)",
+    "routeLine": "Mirpur 10 → Farmgate → Shahbag → Paltan → Motijheel",
+    "status": "ACTIVE",
+    "operatingDays": ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY"],
     "pickupPoints": [
       {
-        "placeName": "Test Point",
+        "placeName": "Mirpur 10",
+        "placeDetails": "In front of Mirpur 10 Metro Station",
+        "pickupTime": "07:15",
+        "stopOrder": 1
+      },
+      {
+        "placeName": "Farmgate",
+        "placeDetails": "Near Farmgate Bus Stand",
         "pickupTime": "07:30",
-        "stopOrder": 1
+        "stopOrder": 2
+      },
+      {
+        "placeName": "Shahbag",
+        "placeDetails": "Opposite of Dhaka University",
+        "pickupTime": "07:45",
+        "stopOrder": 3
+      },
+      {
+        "placeName": "Paltan",
+        "placeDetails": "Paltan Crossing",
+        "pickupTime": "08:00",
+        "stopOrder": 4
+      },
+      {
+        "placeName": "Motijheel",
+        "placeDetails": "Near Motijheel Shapla Chattar",
+        "pickupTime": "08:15",
+        "stopOrder": 5
       }
     ]
   }'
 ```
 
-### 11. Try Creating Route with Invalid Time Format
+### 9. Partial Update (PATCH)
 ```bash
+# Update only bus number
+curl -X PATCH http://localhost:8080/api/v1/routes/2 \
+  -H "Content-Type: application/json" \
+  -d '{
+    "busNo": "BUS-002-NEW"
+  }'
+
+# Update only route name
+curl -X PATCH http://localhost:8080/api/v1/routes/2 \
+  -H "Content-Type: application/json" \
+  -d '{
+    "routeName": "Uttara - Gulshan Express"
+  }'
+
+# Update only operating days
+curl -X PATCH http://localhost:8080/api/v1/routes/2 \
+  -H "Content-Type: application/json" \
+  -d '{
+    "operatingDays": ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY"]
+  }'
+
+# Update multiple fields
+curl -X PATCH http://localhost:8080/api/v1/routes/3 \
+  -H "Content-Type: application/json" \
+  -d '{
+    "routeLine": "Dhanmondi 32 → Science Lab → Shahbag → Motijheel",
+    "status": "ACTIVE"
+  }'
+```
+
+### 10. Add Pickup Point to Route
+```bash
+curl -X POST http://localhost:8080/api/v1/routes/1/pickup-points \
+  -H "Content-Type: application/json" \
+  -d '{
+    "placeName": "Paltan",
+    "placeDetails": "Paltan Crossing",
+    "pickupTime": "08:05",
+    "stopOrder": 5
+  }'
+```
+
+### 11. Update Pickup Point
+```bash
+curl -X PUT http://localhost:8080/api/v1/routes/1/pickup-points/5 \
+  -H "Content-Type: application/json" \
+  -d '{
+    "placeName": "Paltan (Updated)",
+    "placeDetails": "Paltan Crossing - Near Bangladesh Bank",
+    "pickupTime": "08:10",
+    "stopOrder": 5
+  }'
+```
+
+### 12. Delete Pickup Point
+```bash
+curl -X DELETE http://localhost:8080/api/v1/routes/1/pickup-points/5
+```
+
+### 13. Reorder Pickup Points
+```bash
+curl -X POST http://localhost:8080/api/v1/routes/1/pickup-points/reorder \
+  -H "Content-Type: application/json" \
+  -d '[4, 1, 2, 3]'
+```
+
+### 14. Get Route Statistics
+```bash
+# Statistics for specific route
+curl -X GET http://localhost:8080/api/v1/routes/1/statistics
+
+# Statistics for all routes
+curl -X GET http://localhost:8080/api/v1/routes/statistics/all
+```
+
+### 15. Get Buses by Route
+```bash
+curl -X GET http://localhost:8080/api/v1/routes/1/buses
+```
+
+### 16. Get Active Buses by Route
+```bash
+curl -X GET http://localhost:8080/api/v1/routes/1/buses/active
+```
+
+### 17. Get Slots by Route
+```bash
+curl -X GET http://localhost:8080/api/v1/routes/1/slots
+```
+
+### 18. Get Active Slots by Route
+```bash
+curl -X GET http://localhost:8080/api/v1/routes/1/slots/active
+```
+
+### 19. Delete Route
+```bash
+# Delete Route 4
+curl -X DELETE http://localhost:8080/api/v1/routes/4
+
+# Try to get deleted route (should return 404)
+curl -X GET http://localhost:8080/api/v1/routes/4
+```
+
+### 20. Error Testing
+
+```bash
+# Try to create duplicate bus number (should fail)
 curl -X POST http://localhost:8080/api/v1/routes \
   -H "Content-Type: application/json" \
   -d '{
-    "busNo": "BUS-04",
-    "routeName": "Invalid Time Test",
+    "busNo": "BUS-001",
+    "routeName": "Duplicate Route",
     "routeLine": "Test → Route",
     "operatingDays": ["MONDAY"],
     "pickupPoints": [
       {
         "placeName": "Test Point",
-        "pickupTime": "25:30",
-        "stopOrder": 1
-      }
-    ]
-  }'
-```
-
-### 12. Try Creating Duplicate Route (Should Fail)
-```bash
-curl -X POST http://localhost:8080/api/v1/routes \
-  -H "Content-Type: application/json" \
-  -d '{
-    "busNo": "BUS-01",
-    "routeName": "Duplicate Route",
-    "routeLine": "Duplicate → Route",
-    "operatingDays": ["MONDAY"],
-    "pickupPoints": [
-      {
-        "placeName": "Duplicate Point",
         "pickupTime": "10:00",
         "stopOrder": 1
       }
     ]
   }'
-```
 
-### 13. Try Creating Route with Empty Pickup Points (Should Fail)
-```bash
-curl -X POST http://localhost:8080/api/v1/routes \
+# Try to get non-existent route
+curl -X GET http://localhost:8080/api/v1/routes/999
+
+# Try to update non-existent route
+curl -X PUT http://localhost:8080/api/v1/routes/999 \
   -H "Content-Type: application/json" \
   -d '{
-    "busNo": "BUS-05",
-    "routeName": "No Pickup Points",
-    "routeLine": "Test → Route",
+    "busNo": "BUS-999",
+    "routeName": "Non Existent",
+    "routeLine": "Nowhere",
+    "status": "ACTIVE",
     "operatingDays": ["MONDAY"],
     "pickupPoints": []
   }'
+
+# Try to add pickup point with duplicate stop order
+curl -X POST http://localhost:8080/api/v1/routes/1/pickup-points \
+  -H "Content-Type: application/json" \
+  -d '{
+    "placeName": "Duplicate Order",
+    "placeDetails": "Testing duplicate",
+    "pickupTime": "09:00",
+    "stopOrder": 2
+  }'
 ```
 
-## Note:
-- Replace `http://localhost:8080` with your actual server URL if different
-- The enums `DAY` and `ROUTE_STATUS` should have these values:
-  - DAY: MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY, SUNDAY
-  - ROUTE_STATUS: ACTIVE, INACTIVE, MAINTENANCE
-- All times should be in 24-hour format (HH:mm)
-- Bus number must follow pattern: BUS-01 or BUS-001
+## Complete Test Flow (Run in Order)
+
+```bash
+# 1. Create routes
+curl -X POST http://localhost:8080/api/v1/routes -H "Content-Type: application/json" -d '{"busNo":"BUS-T1","routeName":"Test Route 1","routeLine":"A → B","operatingDays":["MONDAY"],"pickupPoints":[{"placeName":"Point A","pickupTime":"07:00","stopOrder":1}]}'
+curl -X POST http://localhost:8080/api/v1/routes -H "Content-Type: application/json" -d '{"busNo":"BUS-T2","routeName":"Test Route 2","routeLine":"C → D","operatingDays":["TUESDAY"],"pickupPoints":[{"placeName":"Point C","pickupTime":"08:00","stopOrder":1}]}'
+
+# 2. Get all routes
+curl -X GET http://localhost:8080/api/v1/routes
+
+# 3. Get route by ID
+curl -X GET http://localhost:8080/api/v1/routes/1
+
+# 4. Update status
+curl -X PATCH "http://localhost:8080/api/v1/routes/1/status?status=MAINTENANCE"
+
+# 5. Add pickup point
+curl -X POST http://localhost:8080/api/v1/routes/1/pickup-points -H "Content-Type: application/json" -d '{"placeName":"Point B","pickupTime":"07:30","stopOrder":2}'
+
+# 6. Get route statistics
+curl -X GET http://localhost:8080/api/v1/routes/1/statistics
+
+# 7. Delete test route
+curl -X DELETE http://localhost:8080/api/v1/routes/2
+
+# 8. Verify deletion
+curl -X GET http://localhost:8080/api/v1/routes
+```
+

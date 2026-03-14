@@ -1,5 +1,7 @@
 package com.fmahadybd.bms_services.route.service;
 
+import com.fmahadybd.bms_services.bus.dto.BusResponse;
+import com.fmahadybd.bms_services.bus.model.Bus;
 import com.fmahadybd.bms_services.enums.DAY;
 import com.fmahadybd.bms_services.enums.ROUTE_STATUS;
 import com.fmahadybd.bms_services.exception.DuplicateResourceException;
@@ -7,6 +9,8 @@ import com.fmahadybd.bms_services.exception.ResourceNotFoundException;
 import com.fmahadybd.bms_services.route.dto.*;
 import com.fmahadybd.bms_services.route.model.*;
 import com.fmahadybd.bms_services.route.repository.RouteRepository;
+import com.fmahadybd.bms_services.slot.dto.BusSlotResponse;
+import com.fmahadybd.bms_services.slot.model.BusSlot;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,7 +36,7 @@ public class RouteService {
                 .busNo(req.getBusNo())
                 .routeName(req.getRouteName())
                 .routeLine(req.getRouteLine())
-                .status(ROUTE_STATUS.ACTIVE)  // Default status
+                .status(ROUTE_STATUS.ACTIVE)
                 .build();
 
         // Map pickup points
@@ -57,47 +61,47 @@ public class RouteService {
         route.setPickupPoints(pickups);
         route.setOperatingDays(days);
 
-        return toResponse(routeRepository.save(route));
+        return convertToResponse(routeRepository.save(route));
     }
 
     // ── Get All ───────────────────────────────────────────────────────────────
     public List<RouteResponse> findAll() {
         return routeRepository.findAll().stream()
-                .map(this::toResponse)
+                .map(this::convertToResponse)
                 .collect(Collectors.toList());
     }
 
     // ── Get by ID ─────────────────────────────────────────────────────────────
     public RouteResponse findById(Long id) {
-        return toResponse(getOrThrow(id));
+        return convertToResponse(getRouteOrThrow(id));
     }
 
     // ── Get by Bus No ─────────────────────────────────────────────────────────
     public RouteResponse findByBusNo(String busNo) {
-        return toResponse(routeRepository.findByBusNo(busNo)
+        return convertToResponse(routeRepository.findByBusNo(busNo)
                 .orElseThrow(() -> new ResourceNotFoundException("Route not found: " + busNo)));
     }
 
     // ── Get by Day ────────────────────────────────────────────────────────────
     public List<RouteResponse> findByDay(DAY day) {
         return routeRepository.findByOperatingDays_Day(day).stream()
-                .map(this::toResponse)
+                .map(this::convertToResponse)
                 .collect(Collectors.toList());
     }
 
     // ── Get by Status ─────────────────────────────────────────────────────────
     public List<RouteResponse> findByStatus(ROUTE_STATUS status) {
         return routeRepository.findByStatus(status).stream()
-                .map(this::toResponse)
+                .map(this::convertToResponse)
                 .collect(Collectors.toList());
     }
 
     // ── Update Status ─────────────────────────────────────────────────────────
     @Transactional
     public RouteResponse updateStatus(Long id, ROUTE_STATUS status) {
-        Route route = getOrThrow(id);
+        Route route = getRouteOrThrow(id);
         route.setStatus(status);
-        return toResponse(routeRepository.save(route));
+        return convertToResponse(routeRepository.save(route));
     }
 
     // ── Delete ────────────────────────────────────────────────────────────────
@@ -108,10 +112,10 @@ public class RouteService {
         routeRepository.deleteById(id);
     }
 
-    // ── Full Update (PUT) ─────────────────────────────────────────────────────────
+    // ── Full Update (PUT) ─────────────────────────────────────────────────────
     @Transactional
     public RouteResponse update(Long id, UpdateRouteRequest req) {
-        Route route = getOrThrow(id);
+        Route route = getRouteOrThrow(id);
         
         // Check if bus number is being changed and if it's already taken
         if (!route.getBusNo().equals(req.getBusNo()) && 
@@ -131,13 +135,13 @@ public class RouteService {
         // Update operating days
         updateOperatingDays(route, req.getOperatingDays());
 
-        return toResponse(routeRepository.save(route));
+        return convertToResponse(routeRepository.save(route));
     }
 
-    // ── Partial Update (PATCH) ───────────────────────────────────────────────────
+    // ── Partial Update (PATCH) ─────────────────────────────────────────────────
     @Transactional
     public RouteResponse partialUpdate(Long id, Map<String, Object> updates) {
-        Route route = getOrThrow(id);
+        Route route = getRouteOrThrow(id);
         
         updates.forEach((key, value) -> {
             switch (key) {
@@ -176,10 +180,10 @@ public class RouteService {
             }
         });
         
-        return toResponse(routeRepository.save(route));
+        return convertToResponse(routeRepository.save(route));
     }
 
-    // ── Update Pickup Points (Helper) ────────────────────────────────────────────
+    // ── Update Pickup Points (Helper) ─────────────────────────────────────────
     private void updatePickupPoints(Route route, List<PickupPointRequest> pickupRequests) {
         // Clear existing pickup points
         route.getPickupPoints().clear();
@@ -198,7 +202,7 @@ public class RouteService {
         route.getPickupPoints().addAll(newPickups);
     }
 
-    // ── Update Operating Days (Helper) ───────────────────────────────────────────
+    // ── Update Operating Days (Helper) ───────────────────────────────────────
     private void updateOperatingDays(Route route, List<DAY> dayRequests) {
         // Clear existing operating days
         route.getOperatingDays().clear();
@@ -214,10 +218,10 @@ public class RouteService {
         route.getOperatingDays().addAll(newDays);
     }
 
-    // ── Add or Update Single Pickup Point ────────────────────────────────────────
+    // ── Add Single Pickup Point ──────────────────────────────────────────────
     @Transactional
     public PickupPointResponse addPickupPoint(Long routeId, PickupPointRequest req) {
-        Route route = getOrThrow(routeId);
+        Route route = getRouteOrThrow(routeId);
         
         // Check if stop order is already taken
         boolean stopOrderExists = route.getPickupPoints().stream()
@@ -238,19 +242,13 @@ public class RouteService {
         route.getPickupPoints().add(pickupPoint);
         routeRepository.save(route);
         
-        return PickupPointResponse.builder()
-            .id(pickupPoint.getId())
-            .placeName(pickupPoint.getPlaceName())
-            .placeDetails(pickupPoint.getPlaceDetails())
-            .pickupTime(pickupPoint.getPickupTime())
-            .stopOrder(pickupPoint.getStopOrder())
-            .build();
+        return convertToPickupPointResponse(pickupPoint);
     }
 
-    // ── Update Single Pickup Point ───────────────────────────────────────────────
+    // ── Update Single Pickup Point ───────────────────────────────────────────
     @Transactional
     public PickupPointResponse updatePickupPoint(Long routeId, Long pickupPointId, PickupPointRequest req) {
-        Route route = getOrThrow(routeId);
+        Route route = getRouteOrThrow(routeId);
         
         PickupPoint pickupPoint = route.getPickupPoints().stream()
             .filter(p -> p.getId().equals(pickupPointId))
@@ -273,19 +271,13 @@ public class RouteService {
         
         routeRepository.save(route);
         
-        return PickupPointResponse.builder()
-            .id(pickupPoint.getId())
-            .placeName(pickupPoint.getPlaceName())
-            .placeDetails(pickupPoint.getPlaceDetails())
-            .pickupTime(pickupPoint.getPickupTime())
-            .stopOrder(pickupPoint.getStopOrder())
-            .build();
+        return convertToPickupPointResponse(pickupPoint);
     }
 
-    // ── Delete Single Pickup Point ───────────────────────────────────────────────
+    // ── Delete Single Pickup Point ───────────────────────────────────────────
     @Transactional
     public void deletePickupPoint(Long routeId, Long pickupPointId) {
-        Route route = getOrThrow(routeId);
+        Route route = getRouteOrThrow(routeId);
         
         boolean removed = route.getPickupPoints().removeIf(p -> p.getId().equals(pickupPointId));
         
@@ -296,10 +288,10 @@ public class RouteService {
         routeRepository.save(route);
     }
 
-    // ── Reorder Pickup Points ────────────────────────────────────────────────────
+    // ── Reorder Pickup Points ────────────────────────────────────────────────
     @Transactional
     public List<PickupPointResponse> reorderPickupPoints(Long routeId, List<Long> pickupPointIdsInOrder) {
-        Route route = getOrThrow(routeId);
+        Route route = getRouteOrThrow(routeId);
         
         if (pickupPointIdsInOrder.size() != route.getPickupPoints().size()) {
             throw new IllegalArgumentException("Number of pickup points doesn't match");
@@ -327,47 +319,159 @@ public class RouteService {
         // Return reordered list
         return route.getPickupPoints().stream()
             .sorted((p1, p2) -> p1.getStopOrder().compareTo(p2.getStopOrder()))
-            .map(p -> PickupPointResponse.builder()
-                .id(p.getId())
-                .placeName(p.getPlaceName())
-                .placeDetails(p.getPlaceDetails())
-                .pickupTime(p.getPickupTime())
-                .stopOrder(p.getStopOrder())
-                .build())
+            .map(this::convertToPickupPointResponse)
             .collect(Collectors.toList());
     }
 
-    // ── Helpers ───────────────────────────────────────────────────────────────
-    private Route getOrThrow(Long id) {
+    // ── Get Buses by Route ───────────────────────────────────────────────────
+    public List<BusResponse> getBusesByRoute(Long routeId) {
+        Route route = getRouteOrThrow(routeId);
+        
+        return route.getBuses().stream()
+            .map(this::convertToBusResponse)
+            .collect(Collectors.toList());
+    }
+
+    // ── Get Slots by Route ───────────────────────────────────────────────────
+    public List<BusSlotResponse> getSlotsByRoute(Long routeId) {
+        Route route = getRouteOrThrow(routeId);
+        
+        return route.getBusSlots().stream()
+            .map(this::convertToBusSlotResponse)
+            .collect(Collectors.toList());
+    }
+
+    // ── Get Active Buses by Route ────────────────────────────────────────────
+    public List<BusResponse> getActiveBusesByRoute(Long routeId) {
+        Route route = getRouteOrThrow(routeId);
+        
+        return route.getBuses().stream()
+            .filter(bus -> bus.getStatus().toString().equals("ACTIVE"))
+            .map(this::convertToBusResponse)
+            .collect(Collectors.toList());
+    }
+
+    // ── Get Active Slots by Route ────────────────────────────────────────────
+    public List<BusSlotResponse> getActiveSlotsByRoute(Long routeId) {
+        Route route = getRouteOrThrow(routeId);
+        
+        return route.getBusSlots().stream()
+            .filter(slot -> slot.getStatus().toString().equals("ACTIVE"))
+            .map(this::convertToBusSlotResponse)
+            .collect(Collectors.toList());
+    }
+
+    // ── Get Route Statistics ─────────────────────────────────────────────────
+    public RouteStatistics getRouteStatistics(Long routeId) {
+        Route route = getRouteOrThrow(routeId);
+        
+        long totalBuses = route.getBuses().size();
+        long activeBuses = route.getBuses().stream()
+            .filter(bus -> bus.getStatus().toString().equals("ACTIVE"))
+            .count();
+        long totalSlots = route.getBusSlots().size();
+        long activeSlots = route.getBusSlots().stream()
+            .filter(slot -> slot.getStatus().toString().equals("ACTIVE"))
+            .count();
+        
+        return RouteStatistics.builder()
+            .routeId(route.getId())
+            .routeName(route.getRouteName())
+            .totalBuses(totalBuses)
+            .activeBuses(activeBuses)
+            .totalSlots(totalSlots)
+            .activeSlots(activeSlots)
+            .totalPickupPoints(route.getPickupPoints().size())
+            .operatingDays(route.getOperatingDays().stream()
+                .map(RouteDay::getDay)
+                .collect(Collectors.toList()))
+            .build();
+    }
+
+    // ── Get All Routes Statistics ────────────────────────────────────────────
+    public List<RouteStatistics> getAllRoutesStatistics() {
+        return routeRepository.findAll().stream()
+            .map(route -> getRouteStatistics(route.getId()))
+            .collect(Collectors.toList());
+    }
+
+    // ── Helper Methods ───────────────────────────────────────────────────────
+    private Route getRouteOrThrow(Long id) {
         return routeRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Route not found: " + id));
     }
 
-    private RouteResponse toResponse(Route r) {
-        List<PickupPointResponse> pickups = r.getPickupPoints().stream()
-                .map(p -> PickupPointResponse.builder()
-                        .id(p.getId())
-                        .placeName(p.getPlaceName())
-                        .placeDetails(p.getPlaceDetails())
-                        .pickupTime(p.getPickupTime())
-                        .stopOrder(p.getStopOrder())
-                        .build())
+    private RouteResponse convertToResponse(Route route) {
+        List<PickupPointResponse> pickups = route.getPickupPoints().stream()
+                .map(this::convertToPickupPointResponse)
                 .collect(Collectors.toList());
 
-        List<DAY> days = r.getOperatingDays().stream()
+        List<DAY> days = route.getOperatingDays().stream()
                 .map(RouteDay::getDay)
                 .collect(Collectors.toList());
 
+        List<BusResponse> buses = route.getBuses() != null ? 
+            route.getBuses().stream()
+                .map(this::convertToBusResponse)
+                .collect(Collectors.toList()) : 
+            List.of();
+
+        List<BusSlotResponse> slots = route.getBusSlots() != null ?
+            route.getBusSlots().stream()
+                .map(this::convertToBusSlotResponse)
+                .collect(Collectors.toList()) :
+            List.of();
+
         return RouteResponse.builder()
-                .id(r.getId())
-                .busNo(r.getBusNo())
-                .routeName(r.getRouteName())
-                .routeLine(r.getRouteLine())
-                .status(r.getStatus())  // Include status
+                .id(route.getId())
+                .busNo(route.getBusNo())
+                .routeName(route.getRouteName())
+                .routeLine(route.getRouteLine())
+                .status(route.getStatus())
                 .pickupPoints(pickups)
                 .operatingDays(days)
-                .createdAt(r.getCreatedAt())
-                .updatedAt(r.getUpdatedAt())
+                .buses(buses)
+                .busSlots(slots)
+                .createdAt(route.getCreatedAt())
+                .updatedAt(route.getUpdatedAt())
+                .build();
+    }
+
+    private PickupPointResponse convertToPickupPointResponse(PickupPoint pickupPoint) {
+        return PickupPointResponse.builder()
+                .id(pickupPoint.getId())
+                .placeName(pickupPoint.getPlaceName())
+                .placeDetails(pickupPoint.getPlaceDetails())
+                .pickupTime(pickupPoint.getPickupTime())
+                .stopOrder(pickupPoint.getStopOrder())
+                .build();
+    }
+
+    private BusResponse convertToBusResponse(Bus bus) {
+        return BusResponse.builder()
+                .id(bus.getId())
+                .busName(bus.getBusName())
+                .busNumber(bus.getBusNumber())
+                .status(bus.getStatus())
+                .driverName(bus.getDriverName())
+                .helperName(bus.getHelperName())
+                .driverPhone(bus.getDriverPhone())
+                .helperPhone(bus.getHelperPhone())
+                .build();
+    }
+
+    private BusSlotResponse convertToBusSlotResponse(BusSlot slot) {
+        return BusSlotResponse.builder()
+                .id(slot.getId())
+                .slotName(slot.getSlotName())
+                .pickupTime(slot.getPickupTime())
+                .dropTime(slot.getDropTime())
+                .fromLocation(slot.getFromLocation())
+                .toLocation(slot.getToLocation())
+                .status(slot.getStatus())
+                .description(slot.getDescription())
+                .isRegular(slot.isRegular())
+                .regularDays(slot.getRegularDays())
                 .build();
     }
 }

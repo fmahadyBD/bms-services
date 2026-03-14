@@ -1,5 +1,8 @@
 package com.fmahadybd.bms_services.slot.services;
 
+import com.fmahadybd.bms_services.bus.dto.BusResponse;
+import com.fmahadybd.bms_services.bus.model.Bus;
+import com.fmahadybd.bms_services.bus.repository.BusRepository;
 import com.fmahadybd.bms_services.exception.DuplicateResourceException;
 import com.fmahadybd.bms_services.exception.ResourceNotFoundException;
 import com.fmahadybd.bms_services.route.dto.RouteResponse;
@@ -15,6 +18,7 @@ import com.fmahadybd.bms_services.slot.repository.BusSlotRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
 import java.time.LocalTime;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -24,6 +28,7 @@ import java.util.stream.Collectors;
 public class BusSlotService {
 
     private final BusSlotRepository busSlotRepository;
+    private final BusRepository busRepository;  // New dependency
 
     // ── Create Bus Slot ────────────────────────────────────────────────────
     @Transactional
@@ -40,8 +45,8 @@ public class BusSlotService {
         }
 
         Route route = Route.builder().id(request.getRouteId()).build();
-
-        BusSlot slot = BusSlot.builder()
+        
+        BusSlot.BusSlotBuilder slotBuilder = BusSlot.builder()
                 .route(route)
                 .slotName(request.getSlotName())
                 .pickupTime(request.getPickupTime())
@@ -52,10 +57,16 @@ public class BusSlotService {
                 .description(request.getDescription())
                 .isRegular(request.isRegular())
                 .regularDays(request.getRegularDays())
-                .createdBy(managerId)
-                .build();
+                .createdBy(managerId);
 
-        BusSlot savedSlot = busSlotRepository.save(slot);
+        // Assign bus if busId is provided
+        if (request.getBusId() != null) {
+            Bus bus = busRepository.findById(request.getBusId())
+                .orElseThrow(() -> new ResourceNotFoundException("Bus not found with id: " + request.getBusId()));
+            slotBuilder.bus(bus);
+        }
+
+        BusSlot savedSlot = busSlotRepository.save(slotBuilder.build());
         return toResponse(savedSlot);
     }
 
@@ -86,6 +97,15 @@ public class BusSlotService {
         slot.setRegularDays(request.getRegularDays());
         slot.setUpdatedBy(managerId);
 
+        // Update bus assignment if busId is provided
+        if (request.getBusId() != null) {
+            Bus bus = busRepository.findById(request.getBusId())
+                .orElseThrow(() -> new ResourceNotFoundException("Bus not found with id: " + request.getBusId()));
+            slot.setBus(bus);
+        } else {
+            slot.setBus(null); // Remove bus assignment
+        }
+
         if (request.getStatus() != null) {
             slot.setStatus(request.getStatus());
         }
@@ -112,6 +132,13 @@ public class BusSlotService {
                 .collect(Collectors.toList());
     }
 
+    // ── Get Slots by Bus ───────────────────────────────────────────────────
+    public List<BusSlotResponse> getSlotsByBus(Long busId) {
+        return busSlotRepository.findByBusId(busId).stream()
+                .map(this::toResponse)
+                .collect(Collectors.toList());
+    }
+
     // ── Get Slots by Status ────────────────────────────────────────────────
     public List<BusSlotResponse> getSlotsByStatus(BUS_SLOT_STATUS status) {
         return busSlotRepository.findByStatus(status).stream()
@@ -130,6 +157,14 @@ public class BusSlotService {
     public List<BusSlotResponse> getSlotsByRouteAndTimeRange(
             Long routeId, LocalTime fromTime, LocalTime toTime) {
         return busSlotRepository.findByRouteIdAndPickupTimeBetween(routeId, fromTime, toTime).stream()
+                .map(this::toResponse)
+                .collect(Collectors.toList());
+    }
+
+    // ── Get Slots by Bus and Date ──────────────────────────────────────────
+    public List<BusSlotResponse> getSlotsByBusAndTimeRange(
+            Long busId, LocalTime fromTime, LocalTime toTime) {
+        return busSlotRepository.findByBusIdAndPickupTimeBetween(busId, fromTime, toTime).stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
     }
@@ -159,6 +194,12 @@ public class BusSlotService {
         if (filter.getRouteId() != null) {
             slots = slots.stream()
                     .filter(s -> s.getRoute().getId().equals(filter.getRouteId()))
+                    .collect(Collectors.toList());
+        }
+
+        if (filter.getBusId() != null) {
+            slots = slots.stream()
+                    .filter(s -> s.getBus() != null && s.getBus().getId().equals(filter.getBusId()))
                     .collect(Collectors.toList());
         }
 
@@ -206,6 +247,17 @@ public class BusSlotService {
                 .build();
     }
 
+    // ── Get Statistics by Bus ──────────────────────────────────────────────
+    public BusSlotStatistics getStatisticsByBus(Long busId) {
+        long slotsCount = busSlotRepository.countByBusId(busId);
+        long activeCount = busSlotRepository.countByBusIdAndStatus(busId, BUS_SLOT_STATUS.ACTIVE);
+        
+        return BusSlotStatistics.builder()
+                .slotsByRoute(slotsCount)
+                .activeSlots(activeCount)
+                .build();
+    }
+
     // ── Helper Methods ─────────────────────────────────────────────────────
     private BusSlot getOrThrow(Long id) {
         return busSlotRepository.findById(id)
@@ -213,7 +265,7 @@ public class BusSlotService {
     }
 
     private BusSlotResponse toResponse(BusSlot slot) {
-        return BusSlotResponse.builder()
+        BusSlotResponse.BusSlotResponseBuilder builder = BusSlotResponse.builder()
                 .id(slot.getId())
                 .route(mapToRouteResponse(slot.getRoute()))
                 .slotName(slot.getSlotName())
@@ -228,8 +280,14 @@ public class BusSlotService {
                 .createdAt(slot.getCreatedAt())
                 .updatedAt(slot.getUpdatedAt())
                 .createdBy(slot.getCreatedBy())
-                .updatedBy(slot.getUpdatedBy())
-                .build();
+                .updatedBy(slot.getUpdatedBy());
+
+        // Add bus information if present
+        if (slot.getBus() != null) {
+            builder.bus(mapToBusResponse(slot.getBus()));
+        }
+
+        return builder.build();
     }
 
     private RouteResponse mapToRouteResponse(Route route) {
@@ -239,6 +297,19 @@ public class BusSlotService {
                 .routeName(route.getRouteName())
                 .routeLine(route.getRouteLine())
                 .status(route.getStatus())
+                .build();
+    }
+
+    private BusResponse mapToBusResponse(Bus bus) {
+        return BusResponse.builder()
+                .id(bus.getId())
+                .busName(bus.getBusName())
+                .busNumber(bus.getBusNumber())
+                .status(bus.getStatus())
+                .driverName(bus.getDriverName())
+                .helperName(bus.getHelperName())
+                .driverPhone(bus.getDriverPhone())
+                .helperPhone(bus.getHelperPhone())
                 .build();
     }
 }

@@ -15,6 +15,8 @@ public class BusSlotRequest {
     @NotNull(message = "Route ID is required")
     private Long routeId;
 
+    private Long busId;  // New field - optional
+
     @NotBlank(message = "Slot name is required")
     @Size(max = 100)
     private String slotName;

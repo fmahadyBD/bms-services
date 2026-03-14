@@ -106,4 +106,24 @@ public class BusSlotController {
             @PathVariable Long routeId) {
         return ResponseEntity.ok(busSlotService.getStatisticsByRoute(routeId));
     }
+
+    @GetMapping("/bus/{busId}")
+    public ResponseEntity<List<BusSlotResponse>> getSlotsByBus(
+            @PathVariable Long busId) {
+        return ResponseEntity.ok(busSlotService.getSlotsByBus(busId));
+    }
+
+    @GetMapping("/bus/{busId}/time-range")
+    public ResponseEntity<List<BusSlotResponse>> getSlotsByBusAndTimeRange(
+            @PathVariable Long busId,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.TIME) LocalTime fromTime,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.TIME) LocalTime toTime) {
+        return ResponseEntity.ok(busSlotService.getSlotsByBusAndTimeRange(busId, fromTime, toTime));
+    }
+
+    @GetMapping("/statistics/bus/{busId}")
+    public ResponseEntity<BusSlotStatistics> getStatisticsByBus(
+            @PathVariable Long busId) {
+        return ResponseEntity.ok(busSlotService.getStatisticsByBus(busId));
+    }
 }
