@@ -1,10 +1,27 @@
 
-## Bus Slot API Testing Commands
+## Updated Bus Slot API Testing Commands with Bus Assignment
 
-### 1. Create Bus Slots
+### Prerequisites
+First, make sure you have some buses created:
+```bash
+# Create a bus for testing
+curl -X POST http://localhost:8080/api/v1/buses \
+  -H "Content-Type: application/json" \
+  -d '{
+    "busName": "Volvo AC Bus",
+    "busNumber": "DHAKA-METRO-1234",
+    "status": "ACTIVE",
+    "driverName": "John Doe",
+    "helperName": "Jane Smith",
+    "driverPhone": "01712345678",
+    "helperPhone": "01787654321"
+  }'
+```
+
+### 1. Create Bus Slots with Bus Assignment
 
 ```bash
-# Create first bus slot (Morning Express) - Route 1
+# Create first bus slot (Morning Express) - Route 1, No bus assigned
 curl -X POST http://localhost:8080/api/v1/bus-slots \
   -H "Content-Type: application/json" \
   -d '{
@@ -22,7 +39,7 @@ curl -X POST http://localhost:8080/api/v1/bus-slots \
 ```
 
 ```bash
-# Create second bus slot (Evening Special) - Route 1
+# Create second bus slot (Evening Special) - Route 1, No bus assigned
 curl -X POST http://localhost:8080/api/v1/bus-slots \
   -H "Content-Type: application/json" \
   -d '{
@@ -40,7 +57,7 @@ curl -X POST http://localhost:8080/api/v1/bus-slots \
 ```
 
 ```bash
-# Create third bus slot (Weekend Service) - Route 2
+# Create third bus slot (Weekend Service) - Route 2, No bus assigned
 curl -X POST http://localhost:8080/api/v1/bus-slots \
   -H "Content-Type: application/json" \
   -d '{
@@ -58,7 +75,7 @@ curl -X POST http://localhost:8080/api/v1/bus-slots \
 ```
 
 ```bash
-# Create fourth bus slot (Holiday Special) - Route 3
+# Create fourth bus slot (Holiday Special) - Route 3, No bus assigned
 curl -X POST http://localhost:8080/api/v1/bus-slots \
   -H "Content-Type: application/json" \
   -d '{
@@ -92,273 +109,167 @@ curl -X POST http://localhost:8080/api/v1/bus-slots \
   }'
 ```
 
-### 2. Get All Bus Slots
+### 2. Get All Bus Slots (with bus information in response)
 ```bash
-curl -X GET http://localhost:8080/api/v1/bus-slots
+curl -X GET http://localhost:8080/api/v1/bus-slots | json_pp
 ```
 
 ### 3. Get Bus Slot by ID
 ```bash
-curl -X GET http://localhost:8080/api/v1/bus-slots/1
-curl -X GET http://localhost:8080/api/v1/bus-slots/2
-curl -X GET http://localhost:8080/api/v1/bus-slots/3
+# Get slot with bus assignment
+curl -X GET http://localhost:8080/api/v1/bus-slots/5 | json_pp
+
+# Get slot without bus assignment
+curl -X GET http://localhost:8080/api/v1/bus-slots/1 | json_pp
 ```
 
 ### 4. Get Slots by Route
 ```bash
-# Get all slots for Route 1
-curl -X GET http://localhost:8080/api/v1/bus-slots/route/1
-
-# Get all slots for Route 2
-curl -X GET http://localhost:8080/api/v1/bus-slots/route/2
-
-# Get all slots for Route 3
-curl -X GET http://localhost:8080/api/v1/bus-slots/route/3
+# Get all slots for Route 1 (should include bus assignments)
+curl -X GET http://localhost:8080/api/v1/bus-slots/route/1 | json_pp
 ```
 
 ### 5. Get Slots by Bus
 ```bash
 # Get all slots assigned to Bus 1
-curl -X GET http://localhost:8080/api/v1/bus-slots/bus/1
+curl -X GET http://localhost:8080/api/v1/bus-slots/bus/1 | json_pp
+
+# Try with non-existent bus (should return empty array)
+curl -X GET http://localhost:8080/api/v1/bus-slots/bus/999 | json_pp
 ```
 
-### 6. Get Slots by Status
+### 6. Update Entire Slot (PUT) - Including Bus Assignment
+
 ```bash
-# Get ACTIVE slots
-curl -X GET http://localhost:8080/api/v1/bus-slots/status/ACTIVE
-
-# Get INACTIVE slots
-curl -X GET http://localhost:8080/api/v1/bus-slots/status/INACTIVE
-
-# Get FULL slots
-curl -X GET http://localhost:8080/api/v1/bus-slots/status/FULL
-
-# Get CANCELLED slots
-curl -X GET http://localhost:8080/api/v1/bus-slots/status/CANCELLED
-```
-
-### 7. Get Slots by Time Range
-```bash
-# Get slots between 6 AM and 12 PM
-curl -X GET "http://localhost:8080/api/v1/bus-slots/time-range?fromTime=06:00:00&toTime=12:00:00"
-
-# Get slots between 5 PM and 12 AM
-curl -X GET "http://localhost:8080/api/v1/bus-slots/time-range?fromTime=17:00:00&toTime=23:59:00"
-
-# Get slots between 7 AM and 9 AM
-curl -X GET "http://localhost:8080/api/v1/bus-slots/time-range?fromTime=07:00:00&toTime=09:00:00"
-```
-
-### 8. Get Slots by Route and Time Range
-```bash
-# Get slots for Route 1 between 7 AM and 8 PM
-curl -X GET "http://localhost:8080/api/v1/bus-slots/route/1/time-range?fromTime=07:00:00&toTime=20:00:00"
-
-# Get slots for Route 2 between 8 AM and 10 PM
-curl -X GET "http://localhost:8080/api/v1/bus-slots/route/2/time-range?fromTime=08:00:00&toTime=22:00:00"
-```
-
-### 9. Get Slots by Bus and Time Range
-```bash
-# Get slots for Bus 1 between 6 AM and 6 PM
-curl -X GET "http://localhost:8080/api/v1/bus-slots/bus/1/time-range?fromTime=06:00:00&toTime=18:00:00"
-```
-
-### 10. Update Slot Status
-```bash
-# Update slot 1 to FULL
-curl -X PATCH http://localhost:8080/api/v1/bus-slots/1/status \
-  -H "Content-Type: application/json" \
-  -d '{
-    "status": "FULL",
-    "reason": "All seats are booked for this week"
-  }'
-
-# Update slot 2 to CANCELLED
-curl -X PATCH http://localhost:8080/api/v1/bus-slots/2/status \
-  -H "Content-Type: application/json" \
-  -d '{
-    "status": "CANCELLED",
-    "reason": "Service temporarily suspended due to maintenance"
-  }'
-
-# Update slot 3 to ACTIVE
-curl -X PATCH http://localhost:8080/api/v1/bus-slots/3/status \
-  -H "Content-Type: application/json" \
-  -d '{
-    "status": "ACTIVE",
-    "reason": "Service resumed after maintenance"
-  }'
-
-# Update slot 4 to FULL
-curl -X PATCH http://localhost:8080/api/v1/bus-slots/4/status \
-  -H "Content-Type: application/json" \
-  -d '{
-    "status": "FULL",
-    "reason": "Holiday special fully booked"
-  }'
-```
-
-### 11. Update Entire Slot (PUT)
-```bash
-# Update slot 1 with new information
+# Update slot 1 - Assign bus to it
 curl -X PUT http://localhost:8080/api/v1/bus-slots/1 \
   -H "Content-Type: application/json" \
   -d '{
     "routeId": 1,
     "busId": 1,
-    "slotName": "Morning Express - Premium",
+    "slotName": "Morning Express - With Bus",
     "pickupTime": "07:15:00",
     "dropTime": "17:15:00",
     "fromLocation": "Dhaka",
     "toLocation": "Chittagong",
     "status": "ACTIVE",
-    "description": "Premium morning express with AC bus",
+    "description": "Morning express with AC bus assigned",
     "regular": true,
     "regularDays": "MONDAY,WEDNESDAY,FRIDAY"
   }'
+```
 
-# Update slot 2 (remove bus assignment)
+```bash
+# Update slot 2 - Change bus assignment
 curl -X PUT http://localhost:8080/api/v1/bus-slots/2 \
   -H "Content-Type: application/json" \
   -d '{
     "routeId": 1,
+    "busId": 1,
     "slotName": "Evening Special - Updated",
     "pickupTime": "19:00:00",
     "dropTime": "23:59:00",
     "fromLocation": "Chittagong",
     "toLocation": "Dhaka",
     "status": "ACTIVE",
-    "description": "Updated evening service with new timing",
+    "description": "Updated evening service with bus assigned",
     "regular": true,
     "regularDays": "MONDAY,TUESDAY,WEDNESDAY,THURSDAY,FRIDAY"
   }'
 ```
 
-### 12. Filter Slots
 ```bash
-# Filter by route only
-curl -X POST http://localhost:8080/api/v1/bus-slots/filter \
+# Update slot 3 - Remove bus assignment (set busId to null or omit)
+curl -X PUT http://localhost:8080/api/v1/bus-slots/3 \
   -H "Content-Type: application/json" \
   -d '{
-    "routeId": 1
+    "routeId": 2,
+    "slotName": "Weekend Special - Updated",
+    "pickupTime": "09:30:00",
+    "dropTime": "20:30:00",
+    "fromLocation": "Dhaka",
+    "toLocation": "Sylhet",
+    "status": "ACTIVE",
+    "description": "Updated weekend service - no bus assigned",
+    "regular": true,
+    "regularDays": "SATURDAY,SUNDAY"
   }'
+```
 
+### 7. Get Slots by Bus and Time Range
+```bash
+# Get slots for Bus 1 between 6 AM and 6 PM
+curl -X GET "http://localhost:8080/api/v1/bus-slots/bus/1/time-range?fromTime=06:00:00&toTime=18:00:00" | json_pp
+
+# Get slots for Bus 1 between 5 PM and 12 AM
+curl -X GET "http://localhost:8080/api/v1/bus-slots/bus/1/time-range?fromTime=17:00:00&toTime=23:59:00" | json_pp
+```
+
+### 8. Filter Slots with Bus Criteria
+
+```bash
 # Filter by bus only
 curl -X POST http://localhost:8080/api/v1/bus-slots/filter \
   -H "Content-Type: application/json" \
   -d '{
     "busId": 1
-  }'
+  }' | json_pp
+```
 
-# Filter by status only
-curl -X POST http://localhost:8080/api/v1/bus-slots/filter \
-  -H "Content-Type: application/json" \
-  -d '{
-    "status": "ACTIVE"
-  }'
-
-# Filter by time range only
-curl -X POST http://localhost:8080/api/v1/bus-slots/filter \
-  -H "Content-Type: application/json" \
-  -d '{
-    "fromTime": "07:00:00",
-    "toTime": "20:00:00"
-  }'
-
-# Filter by regular slots only
-curl -X POST http://localhost:8080/api/v1/bus-slots/filter \
-  -H "Content-Type: application/json" \
-  -d '{
-    "isRegular": true
-  }'
-
-# Complex filter (route + status + time range + regular)
-curl -X POST http://localhost:8080/api/v1/bus-slots/filter \
-  -H "Content-Type: application/json" \
-  -d '{
-    "routeId": 1,
-    "status": "ACTIVE",
-    "fromTime": "07:00:00",
-    "toTime": "20:00:00",
-    "isRegular": true
-  }'
-
-# Complex filter with bus
+```bash
+# Filter by bus + status
 curl -X POST http://localhost:8080/api/v1/bus-slots/filter \
   -H "Content-Type: application/json" \
   -d '{
     "busId": 1,
-    "status": "ACTIVE",
+    "status": "ACTIVE"
+  }' | json_pp
+```
+
+```bash
+# Filter by bus + time range
+curl -X POST http://localhost:8080/api/v1/bus-slots/filter \
+  -H "Content-Type: application/json" \
+  -d '{
+    "busId": 1,
     "fromTime": "06:00:00",
-    "toTime": "18:00:00"
-  }'
+    "toTime": "20:00:00"
+  }' | json_pp
 ```
 
-### 13. Get Statistics
 ```bash
-# Overall statistics
-curl -X GET http://localhost:8080/api/v1/bus-slots/statistics
-```
-
-### 14. Get Statistics by Route
-```bash
-# Statistics for route 1
-curl -X GET http://localhost:8080/api/v1/bus-slots/statistics/route/1
-
-# Statistics for route 2
-curl -X GET http://localhost:8080/api/v1/bus-slots/statistics/route/2
-
-# Statistics for route 3
-curl -X GET http://localhost:8080/api/v1/bus-slots/statistics/route/3
-```
-
-### 15. Get Statistics by Bus
-```bash
-# Statistics for bus 1
-curl -X GET http://localhost:8080/api/v1/bus-slots/statistics/bus/1
-```
-
-### 16. Delete a Slot
-```bash
-# Delete slot 5
-curl -X DELETE http://localhost:8080/api/v1/bus-slots/5
-
-# Verify deletion (should return 404)
-curl -X GET http://localhost:8080/api/v1/bus-slots/5
-```
-
-### 17. Test Error Cases
-
-```bash
-# Try to create duplicate slot (should fail with 409 Conflict)
-curl -X POST http://localhost:8080/api/v1/bus-slots \
+# Complex filter with all parameters
+curl -X POST http://localhost:8080/api/v1/bus-slots/filter \
   -H "Content-Type: application/json" \
   -d '{
     "routeId": 1,
-    "slotName": "Duplicate Morning",
-    "pickupTime": "07:30:00",
-    "dropTime": "17:30:00",
-    "fromLocation": "Dhaka",
-    "toLocation": "Chittagong",
+    "busId": 1,
     "status": "ACTIVE",
-    "regular": true,
-    "regularDays": "MONDAY,WEDNESDAY,FRIDAY"
-  }'
+    "fromTime": "06:00:00",
+    "toTime": "20:00:00",
+    "isRegular": true
+  }' | json_pp
+```
 
-# Try to create slot with invalid route (should fail)
-curl -X POST http://localhost:8080/api/v1/bus-slots \
-  -H "Content-Type: application/json" \
-  -d '{
-    "routeId": 999,
-    "slotName": "Invalid Route",
-    "pickupTime": "10:00:00",
-    "fromLocation": "A",
-    "toLocation": "B",
-    "status": "ACTIVE"
-  }'
+### 9. Get Statistics by Bus
+```bash
+# Statistics for bus 1
+curl -X GET http://localhost:8080/api/v1/bus-slots/statistics/bus/1 | json_pp
 
-# Try to create slot with invalid bus (should fail)
+# Statistics for non-existent bus
+curl -X GET http://localhost:8080/api/v1/bus-slots/statistics/bus/999 | json_pp
+```
+
+### 10. Get Overall Statistics
+```bash
+# Overall statistics (should include all slots)
+curl -X GET http://localhost:8080/api/v1/bus-slots/statistics | json_pp
+```
+
+### 11. Test Error Cases for Bus Assignment
+
+```bash
+# Try to create slot with non-existent bus (should fail)
 curl -X POST http://localhost:8080/api/v1/bus-slots \
   -H "Content-Type: application/json" \
   -d '{
@@ -366,78 +277,84 @@ curl -X POST http://localhost:8080/api/v1/bus-slots \
     "busId": 999,
     "slotName": "Invalid Bus",
     "pickupTime": "11:00:00",
-    "fromLocation": "A",
-    "toLocation": "B",
-    "status": "ACTIVE"
+    "dropTime": "21:00:00",
+    "fromLocation": "Dhaka",
+    "toLocation": "Chittagong",
+    "status": "ACTIVE",
+    "regular": true
   }'
+```
 
-# Try to get non-existent slot (should return 404)
-curl -X GET http://localhost:8080/api/v1/bus-slots/999
-
-# Try to update non-existent slot (should return 404)
-curl -X PUT http://localhost:8080/api/v1/bus-slots/999 \
+```bash
+# Try to update slot with non-existent bus (should fail)
+curl -X PUT http://localhost:8080/api/v1/bus-slots/1 \
   -H "Content-Type: application/json" \
   -d '{
     "routeId": 1,
-    "slotName": "Non Existent",
+    "busId": 999,
+    "slotName": "Invalid Bus Update",
     "pickupTime": "07:30:00",
-    "fromLocation": "A",
-    "toLocation": "B",
+    "fromLocation": "Dhaka",
+    "toLocation": "Chittagong",
     "status": "ACTIVE"
   }'
-
-# Try to delete non-existent slot (should return 404)
-curl -X DELETE http://localhost:8080/api/v1/bus-slots/999
-
-# Try to update status with invalid status (should fail)
-curl -X PATCH http://localhost:8080/api/v1/bus-slots/1/status \
-  -H "Content-Type: application/json" \
-  -d '{
-    "status": "INVALID_STATUS",
-    "reason": "Test"
-  }'
 ```
 
-### 18. Complete Test Flow (Run in Order)
+### 12. Complete Test Flow with Bus Assignment
 
 ```bash
-# 1. Create test slots
-echo "Creating test slots..."
-curl -X POST http://localhost:8080/api/v1/bus-slots -H "Content-Type: application/json" -d '{"routeId":1,"slotName":"Test Slot 1","pickupTime":"08:00:00","dropTime":"18:00:00","fromLocation":"A","toLocation":"B","status":"ACTIVE","regular":true,"regularDays":"MONDAY"}'
-curl -X POST http://localhost:8080/api/v1/bus-slots -H "Content-Type: application/json" -d '{"routeId":1,"slotName":"Test Slot 2","pickupTime":"09:00:00","dropTime":"19:00:00","fromLocation":"B","toLocation":"A","status":"ACTIVE","regular":true,"regularDays":"TUESDAY"}'
-curl -X POST http://localhost:8080/api/v1/bus-slots -H "Content-Type: application/json" -d '{"routeId":2,"slotName":"Test Slot 3","pickupTime":"10:00:00","dropTime":"20:00:00","fromLocation":"C","toLocation":"D","status":"INACTIVE","regular":false}'
+# 1. Create a new slot with bus assignment
+echo "Creating slot with bus assignment..."
+curl -X POST http://localhost:8080/api/v1/bus-slots \
+  -H "Content-Type: application/json" \
+  -d '{
+    "routeId": 1,
+    "busId": 1,
+    "slotName": "Test Bus Slot",
+    "pickupTime": "08:00:00",
+    "dropTime": "18:00:00",
+    "fromLocation": "Dhaka",
+    "toLocation": "Chittagong",
+    "status": "ACTIVE",
+    "description": "Test slot with bus",
+    "regular": true,
+    "regularDays": "MONDAY"
+  }'
 
-# 2. Get all slots
-echo -e "\n\nGetting all slots..."
-curl -X GET http://localhost:8080/api/v1/bus-slots
+# 2. Get the created slot to verify bus info
+echo -e "\n\nGetting created slot..."
+curl -X GET http://localhost:8080/api/v1/bus-slots/6 | json_pp
 
-# 3. Get by route
-echo -e "\n\nGetting slots for route 1..."
-curl -X GET http://localhost:8080/api/v1/bus-slots/route/1
+# 3. Get all slots for bus 1
+echo -e "\n\nGetting all slots for bus 1..."
+curl -X GET http://localhost:8080/api/v1/bus-slots/bus/1 | json_pp
 
-# 4. Get by time range
-echo -e "\n\nGetting slots between 7 AM and 10 AM..."
-curl -X GET "http://localhost:8080/api/v1/bus-slots/time-range?fromTime=07:00:00&toTime=10:00:00"
+# 4. Update the slot to change bus (create another bus first if needed)
+echo -e "\n\nUpdating slot to change bus..."
+curl -X PUT http://localhost:8080/api/v1/bus-slots/6 \
+  -H "Content-Type: application/json" \
+  -d '{
+    "routeId": 1,
+    "busId": 1,
+    "slotName": "Test Bus Slot Updated",
+    "pickupTime": "08:30:00",
+    "dropTime": "18:30:00",
+    "fromLocation": "Dhaka",
+    "toLocation": "Chittagong",
+    "status": "ACTIVE",
+    "description": "Updated test slot",
+    "regular": true,
+    "regularDays": "MONDAY,WEDNESDAY"
+  }'
 
-# 5. Update status
-echo -e "\n\nUpdating slot 1 status to FULL..."
-curl -X PATCH http://localhost:8080/api/v1/bus-slots/1/status -H "Content-Type: application/json" -d '{"status":"FULL","reason":"Test booking"}'
+# 5. Filter slots by bus
+echo -e "\n\nFiltering slots by bus..."
+curl -X POST http://localhost:8080/api/v1/bus-slots/filter \
+  -H "Content-Type: application/json" \
+  -d '{"busId": 1}' | json_pp
 
-# 6. Get statistics
-echo -e "\n\nGetting overall statistics..."
-curl -X GET http://localhost:8080/api/v1/bus-slots/statistics
-
-# 7. Filter active slots
-echo -e "\n\nFiltering active slots..."
-curl -X POST http://localhost:8080/api/v1/bus-slots/filter -H "Content-Type: application/json" -d '{"status":"ACTIVE"}'
-
-# 8. Delete test slot
-echo -e "\n\nDeleting slot 3..."
-curl -X DELETE http://localhost:8080/api/v1/bus-slots/3
-
-# 9. Verify deletion
-echo -e "\n\nVerifying deletion..."
-curl -X GET http://localhost:8080/api/v1/bus-slots
+# 6. Get statistics by bus
+echo -e "\n\nGetting statistics for bus 1..."
+curl -X GET http://localhost:8080/api/v1/bus-slots/statistics/bus/1 | json_pp
 ```
 
-These commands cover all your Bus Slot API endpoints. Run them in sequence to test the complete functionality!
