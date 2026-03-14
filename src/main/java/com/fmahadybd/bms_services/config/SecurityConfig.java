@@ -52,7 +52,8 @@ public class SecurityConfig {
                             "/swagger-ui/**",
                             "/swagger-ui.html",
                             "/api/v1/routes/**",
-                            "/api/v1/bus-requests/**"
+                            "/api/v1/bus-requests/**",
+                            "/api/v1/bus-slots/**"
                     ).permitAll()
                     .anyRequest().authenticated()
             )

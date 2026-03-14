@@ -21,7 +21,7 @@ import java.time.LocalTime;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1/bus-slots")
+@RequestMapping("/api/v1/bus-slots/")
 @RequiredArgsConstructor
 public class BusSlotController {
 
