@@ -1,232 +1,298 @@
 
-## Updated Bus Slot API Testing Commands with Bus Assignment
 
-### Prerequisites
-First, make sure you have some buses created:
 ```bash
-# Create a bus for testing
+# ============================================
+# GREEN UNIVERSITY BUS SLOT MANAGEMENT API TESTS
+# Location: Purbachole, Kanchon
+# Routes: Campus to/from Various Dhaka Locations
+# ============================================
+
+# ─────────────────────────────────────────────────
+# PREREQUISITES: Create Buses and Routes First
+# ─────────────────────────────────────────────────
+
+# Create a bus for testing (using BUS-XXX format)
 curl -X POST http://localhost:8080/api/v1/buses \
   -H "Content-Type: application/json" \
   -d '{
-    "busName": "Volvo AC Bus",
-    "busNumber": "DHAKA-METRO-1234",
+    "busName": "Green University AC Express",
+    "busNumber": "BUS-101",
     "status": "ACTIVE",
-    "driverName": "John Doe",
-    "helperName": "Jane Smith",
+    "driverName": "Md. Karim Ullah",
+    "helperName": "Rahim Miah",
     "driverPhone": "01712345678",
-    "helperPhone": "01787654321"
+    "helperPhone": "01812345678"
   }'
-```
 
-### 1. Create Bus Slots with Bus Assignment
+# Create another bus
+curl -X POST http://localhost:8080/api/v1/buses \
+  -H "Content-Type: application/json" \
+  -d '{
+    "busName": "Green University Non-AC",
+    "busNumber": "BUS-102",
+    "status": "ACTIVE",
+    "driverName": "Shahidul Islam",
+    "helperName": "Jahangir Alam",
+    "driverPhone": "01912345678",
+    "helperPhone": "01612345678"
+  }'
 
-```bash
-# Create first bus slot (Morning Express) - Route 1, No bus assigned
+# Create Route 1: Dhaka → Purbachole Campus
+curl -X POST http://localhost:8080/api/v1/routes \
+  -H "Content-Type: application/json" \
+  -d '{
+    "busNo": "BUS-101",
+    "routeName": "Dhaka (Farmgate) → Purbachole Campus",
+    "routeLine": "Farmgate → Shahbag → Malibagh → Rampura → Badda → Kanchon Bridge → Purbachole (GUB)",
+    "operatingDays": ["SATURDAY", "SUNDAY", "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY"],
+    "pickupPoints": [
+      {"placeName": "Farmgate", "placeDetails": "Farmgate Metro Station", "pickupTime": "07:00", "stopOrder": 1},
+      {"placeName": "Shahbag", "placeDetails": "TSC (Dhaka University)", "pickupTime": "07:15", "stopOrder": 2},
+      {"placeName": "Green University Campus", "placeDetails": "Purbachole, Kanchon", "pickupTime": "08:30", "stopOrder": 7}
+    ]
+  }'
+
+# ─────────────────────────────────────────────────
+# 1. CREATE BUS SLOTS (Green University Routes)
+# ─────────────────────────────────────────────────
+
+# Slot 1: Morning Slot - Dhaka to Campus (No bus assigned)
 curl -X POST http://localhost:8080/api/v1/bus-slots \
   -H "Content-Type: application/json" \
   -d '{
     "routeId": 1,
-    "slotName": "Morning Express",
-    "pickupTime": "07:30:00",
-    "dropTime": "17:30:00",
-    "fromLocation": "Dhaka",
-    "toLocation": "Chittagong",
+    "slotName": "Morning Dhaka → Campus",
+    "pickupTime": "07:00:00",
+    "dropTime": "08:30:00",
+    "fromLocation": "Farmgate, Dhaka",
+    "toLocation": "Purbachole, Kanchon (GUB Campus)",
     "status": "ACTIVE",
-    "description": "Morning express bus service from Dhaka to Chittagong",
+    "description": "Morning pickup from Dhaka to Green University Campus",
     "regular": true,
-    "regularDays": "MONDAY,WEDNESDAY,FRIDAY"
+    "regularDays": "SATURDAY,SUNDAY,MONDAY,TUESDAY,WEDNESDAY,THURSDAY"
   }'
-```
 
-```bash
-# Create second bus slot (Evening Special) - Route 1, No bus assigned
+# Slot 2: Evening Slot - Campus to Dhaka (No bus assigned)
 curl -X POST http://localhost:8080/api/v1/bus-slots \
   -H "Content-Type: application/json" \
   -d '{
     "routeId": 1,
-    "slotName": "Evening Special",
-    "pickupTime": "18:30:00",
-    "dropTime": "23:30:00",
-    "fromLocation": "Chittagong",
-    "toLocation": "Dhaka",
+    "slotName": "Evening Campus → Dhaka",
+    "pickupTime": "16:30:00",
+    "dropTime": "18:00:00",
+    "fromLocation": "Purbachole, Kanchon (GUB Campus)",
+    "toLocation": "Motijheel, Dhaka",
     "status": "ACTIVE",
-    "description": "Evening return service from Chittagong to Dhaka",
+    "description": "Evening return from Green University to Dhaka",
     "regular": true,
-    "regularDays": "MONDAY,TUESDAY,WEDNESDAY,THURSDAY,FRIDAY"
+    "regularDays": "SATURDAY,SUNDAY,MONDAY,TUESDAY,WEDNESDAY,THURSDAY"
   }'
-```
 
-```bash
-# Create third bus slot (Weekend Service) - Route 2, No bus assigned
-curl -X POST http://localhost:8080/api/v1/bus-slots \
-  -H "Content-Type: application/json" \
-  -d '{
-    "routeId": 2,
-    "slotName": "Weekend Special",
-    "pickupTime": "09:00:00",
-    "dropTime": "20:00:00",
-    "fromLocation": "Dhaka",
-    "toLocation": "Sylhet",
-    "status": "INACTIVE",
-    "description": "Weekend service only from Dhaka to Sylhet",
-    "regular": true,
-    "regularDays": "SATURDAY,SUNDAY"
-  }'
-```
-
-```bash
-# Create fourth bus slot (Holiday Special) - Route 3, No bus assigned
-curl -X POST http://localhost:8080/api/v1/bus-slots \
-  -H "Content-Type: application/json" \
-  -d '{
-    "routeId": 3,
-    "slotName": "Holiday Special",
-    "pickupTime": "08:00:00",
-    "dropTime": "21:00:00",
-    "fromLocation": "Dhaka",
-    "toLocation": "Coxs Bazar",
-    "description": "Holiday destination service to Coxs Bazar",
-    "regular": false
-  }'
-```
-
-```bash
-# Create fifth bus slot (with bus assignment) - Route 1, Bus 1
+# Slot 3: Mid-day Slot - Express Service (With bus assigned)
 curl -X POST http://localhost:8080/api/v1/bus-slots \
   -H "Content-Type: application/json" \
   -d '{
     "routeId": 1,
     "busId": 1,
-    "slotName": "Morning Express with Bus",
-    "pickupTime": "06:30:00",
-    "dropTime": "16:30:00",
-    "fromLocation": "Dhaka",
-    "toLocation": "Chittagong",
+    "slotName": "Mid-day Express Dhaka ↔ Campus",
+    "pickupTime": "12:00:00",
+    "dropTime": "13:30:00",
+    "fromLocation": "Farmgate, Dhaka",
+    "toLocation": "Purbachole, Kanchon (GUB Campus)",
     "status": "ACTIVE",
-    "description": "Morning express with assigned bus",
+    "description": "Mid-day express service with AC bus",
     "regular": true,
-    "regularDays": "MONDAY,TUESDAY,WEDNESDAY,THURSDAY,FRIDAY"
+    "regularDays": "SATURDAY,MONDAY,WEDNESDAY"
   }'
-```
 
-### 2. Get All Bus Slots (with bus information in response)
-```bash
-curl -X GET http://localhost:8080/api/v1/bus-slots | json_pp
-```
+# Slot 4: Women's Special Slot
+curl -X POST http://localhost:8080/api/v1/bus-slots \
+  -H "Content-Type: application/json" \
+  -d '{
+    "routeId": 1,
+    "busId": 2,
+    "slotName": "Women'\''s Special Morning",
+    "pickupTime": "07:30:00",
+    "dropTime": "09:00:00",
+    "fromLocation": "Mirpur 10, Dhaka",
+    "toLocation": "Purbachole, Kanchon (GUB Campus)",
+    "status": "ACTIVE",
+    "description": "Women's special bus service",
+    "regular": true,
+    "regularDays": "SATURDAY,WEDNESDAY"
+  }'
 
-### 3. Get Bus Slot by ID
-```bash
-# Get slot with bus assignment
-curl -X GET http://localhost:8080/api/v1/bus-slots/5 | json_pp
+# Slot 5: Weekend Holiday Slot
+curl -X POST http://localhost:8080/api/v1/bus-slots \
+  -H "Content-Type: application/json" \
+  -d '{
+    "routeId": 1,
+    "slotName": "Friday Holiday Special",
+    "pickupTime": "09:00:00",
+    "dropTime": "20:00:00",
+    "fromLocation": "Green University Campus",
+    "toLocation": "Cox'\''s Bazar",
+    "status": "INACTIVE",
+    "description": "Weekend holiday trip from campus",
+    "regular": false
+  }'
 
-# Get slot without bus assignment
-curl -X GET http://localhost:8080/api/v1/bus-slots/1 | json_pp
-```
+# Slot 6: Late Evening Slot (With bus assignment)
+curl -X POST http://localhost:8080/api/v1/bus-slots \
+  -H "Content-Type: application/json" \
+  -d '{
+    "routeId": 1,
+    "busId": 1,
+    "slotName": "Late Evening Campus → Dhaka",
+    "pickupTime": "20:00:00",
+    "dropTime": "21:30:00",
+    "fromLocation": "Purbachole, Kanchon (GUB Campus)",
+    "toLocation": "Uttara, Dhaka",
+    "status": "ACTIVE",
+    "description": "Late evening service for north Dhaka residents",
+    "regular": true,
+    "regularDays": "SUNDAY,TUESDAY,THURSDAY"
+  }'
 
-### 4. Get Slots by Route
-```bash
-# Get all slots for Route 1 (should include bus assignments)
-curl -X GET http://localhost:8080/api/v1/bus-slots/route/1 | json_pp
-```
+# ─────────────────────────────────────────────────
+# 2. GET ALL BUS SLOTS
+# ─────────────────────────────────────────────────
+curl -X GET http://localhost:8080/api/v1/bus-slots
 
-### 5. Get Slots by Bus
-```bash
-# Get all slots assigned to Bus 1
-curl -X GET http://localhost:8080/api/v1/bus-slots/bus/1 | json_pp
+# ─────────────────────────────────────────────────
+# 3. GET BUS SLOT BY ID
+# ─────────────────────────────────────────────────
+curl -X GET http://localhost:8080/api/v1/bus-slots/1
+curl -X GET http://localhost:8080/api/v1/bus-slots/3
+curl -X GET http://localhost:8080/api/v1/bus-slots/4
 
-# Try with non-existent bus (should return empty array)
-curl -X GET http://localhost:8080/api/v1/bus-slots/bus/999 | json_pp
-```
+# ─────────────────────────────────────────────────
+# 4. GET SLOTS BY ROUTE
+# ─────────────────────────────────────────────────
+curl -X GET http://localhost:8080/api/v1/bus-slots/route/1
 
-### 6. Update Entire Slot (PUT) - Including Bus Assignment
+# ─────────────────────────────────────────────────
+# 5. GET SLOTS BY BUS
+# ─────────────────────────────────────────────────
+curl -X GET http://localhost:8080/api/v1/bus-slots/bus/1
+curl -X GET http://localhost:8080/api/v1/bus-slots/bus/2
 
-```bash
-# Update slot 1 - Assign bus to it
+# ─────────────────────────────────────────────────
+# 6. GET SLOTS BY STATUS
+# ─────────────────────────────────────────────────
+curl -X GET http://localhost:8080/api/v1/bus-slots/status/ACTIVE
+curl -X GET http://localhost:8080/api/v1/bus-slots/status/INACTIVE
+
+# ─────────────────────────────────────────────────
+# 7. GET SLOTS BY TIME RANGE
+# ─────────────────────────────────────────────────
+curl -X GET "http://localhost:8080/api/v1/bus-slots/time-range?fromTime=06:00:00&toTime=12:00:00"
+curl -X GET "http://localhost:8080/api/v1/bus-slots/time-range?fromTime=16:00:00&toTime=22:00:00"
+
+# ─────────────────────────────────────────────────
+# 8. GET SLOTS BY ROUTE AND TIME RANGE
+# ─────────────────────────────────────────────────
+curl -X GET "http://localhost:8080/api/v1/bus-slots/route/1/time-range?fromTime=06:00:00&toTime=12:00:00"
+
+# ─────────────────────────────────────────────────
+# 9. GET SLOTS BY BUS AND TIME RANGE
+# ─────────────────────────────────────────────────
+curl -X GET "http://localhost:8080/api/v1/bus-slots/bus/1/time-range?fromTime=06:00:00&toTime=18:00:00"
+curl -X GET "http://localhost:8080/api/v1/bus-slots/bus/1/time-range?fromTime=18:00:00&toTime=23:59:00"
+
+# ─────────────────────────────────────────────────
+# 10. UPDATE SLOT STATUS
+# ─────────────────────────────────────────────────
+
+# Activate Slot 5
+curl -X PATCH http://localhost:8080/api/v1/bus-slots/5/status \
+  -H "Content-Type: application/json" \
+  -d '{
+    "status": "ACTIVE",
+    "reason": "Holiday trip approved for upcoming weekend"
+  }'
+
+# Deactivate Slot 4 for maintenance
+curl -X PATCH http://localhost:8080/api/v1/bus-slots/4/status \
+  -H "Content-Type: application/json" \
+  -d '{
+    "status": "INACTIVE",
+    "reason": "Bus under maintenance"
+  }'
+
+# ─────────────────────────────────────────────────
+# 11. UPDATE ENTIRE SLOT (PUT) - Including Bus Assignment
+# ─────────────────────────────────────────────────
+
+# Update Slot 1 - Assign bus to it
 curl -X PUT http://localhost:8080/api/v1/bus-slots/1 \
   -H "Content-Type: application/json" \
   -d '{
     "routeId": 1,
     "busId": 1,
-    "slotName": "Morning Express - With Bus",
-    "pickupTime": "07:15:00",
-    "dropTime": "17:15:00",
-    "fromLocation": "Dhaka",
-    "toLocation": "Chittagong",
+    "slotName": "Morning Dhaka → Campus (AC Bus)",
+    "pickupTime": "06:45:00",
+    "dropTime": "08:15:00",
+    "fromLocation": "Farmgate, Dhaka",
+    "toLocation": "Purbachole, Kanchon (GUB Campus)",
     "status": "ACTIVE",
-    "description": "Morning express with AC bus assigned",
+    "description": "Early morning service with AC bus",
     "regular": true,
-    "regularDays": "MONDAY,WEDNESDAY,FRIDAY"
+    "regularDays": "SATURDAY,SUNDAY,MONDAY,TUESDAY,WEDNESDAY,THURSDAY"
   }'
-```
 
-```bash
-# Update slot 2 - Change bus assignment
+# Update Slot 2 - Change bus assignment
 curl -X PUT http://localhost:8080/api/v1/bus-slots/2 \
   -H "Content-Type: application/json" \
   -d '{
     "routeId": 1,
-    "busId": 1,
-    "slotName": "Evening Special - Updated",
-    "pickupTime": "19:00:00",
-    "dropTime": "23:59:00",
-    "fromLocation": "Chittagong",
-    "toLocation": "Dhaka",
+    "busId": 2,
+    "slotName": "Evening Campus → Dhaka (Express)",
+    "pickupTime": "16:15:00",
+    "dropTime": "17:45:00",
+    "fromLocation": "Purbachole, Kanchon (GUB Campus)",
+    "toLocation": "Motijheel, Dhaka",
     "status": "ACTIVE",
-    "description": "Updated evening service with bus assigned",
+    "description": "Express evening service with Non-AC bus",
     "regular": true,
-    "regularDays": "MONDAY,TUESDAY,WEDNESDAY,THURSDAY,FRIDAY"
+    "regularDays": "SATURDAY,SUNDAY,MONDAY,TUESDAY,WEDNESDAY,THURSDAY"
   }'
-```
 
-```bash
-# Update slot 3 - Remove bus assignment (set busId to null or omit)
+# Update Slot 3 - Remove bus assignment
 curl -X PUT http://localhost:8080/api/v1/bus-slots/3 \
   -H "Content-Type: application/json" \
   -d '{
-    "routeId": 2,
-    "slotName": "Weekend Special - Updated",
-    "pickupTime": "09:30:00",
-    "dropTime": "20:30:00",
-    "fromLocation": "Dhaka",
-    "toLocation": "Sylhet",
+    "routeId": 1,
+    "slotName": "Mid-day Express (Temporary)",
+    "pickupTime": "12:30:00",
+    "dropTime": "14:00:00",
+    "fromLocation": "Farmgate, Dhaka",
+    "toLocation": "Purbachole, Kanchon (GUB Campus)",
     "status": "ACTIVE",
-    "description": "Updated weekend service - no bus assigned",
+    "description": "Temporary service - bus TBD",
     "regular": true,
-    "regularDays": "SATURDAY,SUNDAY"
+    "regularDays": "SATURDAY,MONDAY,WEDNESDAY"
   }'
-```
 
-### 7. Get Slots by Bus and Time Range
-```bash
-# Get slots for Bus 1 between 6 AM and 6 PM
-curl -X GET "http://localhost:8080/api/v1/bus-slots/bus/1/time-range?fromTime=06:00:00&toTime=18:00:00" | json_pp
+# ─────────────────────────────────────────────────
+# 12. FILTER SLOTS
+# ─────────────────────────────────────────────────
 
-# Get slots for Bus 1 between 5 PM and 12 AM
-curl -X GET "http://localhost:8080/api/v1/bus-slots/bus/1/time-range?fromTime=17:00:00&toTime=23:59:00" | json_pp
-```
-
-### 8. Filter Slots with Bus Criteria
-
-```bash
 # Filter by bus only
 curl -X POST http://localhost:8080/api/v1/bus-slots/filter \
   -H "Content-Type: application/json" \
   -d '{
     "busId": 1
-  }' | json_pp
-```
+  }'
 
-```bash
 # Filter by bus + status
 curl -X POST http://localhost:8080/api/v1/bus-slots/filter \
   -H "Content-Type: application/json" \
   -d '{
     "busId": 1,
     "status": "ACTIVE"
-  }' | json_pp
-```
+  }'
 
-```bash
 # Filter by bus + time range
 curl -X POST http://localhost:8080/api/v1/bus-slots/filter \
   -H "Content-Type: application/json" \
@@ -234,10 +300,16 @@ curl -X POST http://localhost:8080/api/v1/bus-slots/filter \
     "busId": 1,
     "fromTime": "06:00:00",
     "toTime": "20:00:00"
-  }' | json_pp
-```
+  }'
 
-```bash
+# Filter by route + status
+curl -X POST http://localhost:8080/api/v1/bus-slots/filter \
+  -H "Content-Type: application/json" \
+  -d '{
+    "routeId": 1,
+    "status": "ACTIVE"
+  }'
+
 # Complex filter with all parameters
 curl -X POST http://localhost:8080/api/v1/bus-slots/filter \
   -H "Content-Type: application/json" \
@@ -248,113 +320,134 @@ curl -X POST http://localhost:8080/api/v1/bus-slots/filter \
     "fromTime": "06:00:00",
     "toTime": "20:00:00",
     "isRegular": true
-  }' | json_pp
-```
+  }'
 
-### 9. Get Statistics by Bus
-```bash
-# Statistics for bus 1
-curl -X GET http://localhost:8080/api/v1/bus-slots/statistics/bus/1 | json_pp
+# ─────────────────────────────────────────────────
+# 13. GET STATISTICS
+# ─────────────────────────────────────────────────
 
-# Statistics for non-existent bus
-curl -X GET http://localhost:8080/api/v1/bus-slots/statistics/bus/999 | json_pp
-```
+# Overall statistics
+curl -X GET http://localhost:8080/api/v1/bus-slots/statistics
 
-### 10. Get Overall Statistics
-```bash
-# Overall statistics (should include all slots)
-curl -X GET http://localhost:8080/api/v1/bus-slots/statistics | json_pp
-```
+# Statistics by route
+curl -X GET http://localhost:8080/api/v1/bus-slots/statistics/route/1
 
-### 11. Test Error Cases for Bus Assignment
+# Statistics by bus
+curl -X GET http://localhost:8080/api/v1/bus-slots/statistics/bus/1
+curl -X GET http://localhost:8080/api/v1/bus-slots/statistics/bus/2
 
-```bash
-# Try to create slot with non-existent bus (should fail)
+# ─────────────────────────────────────────────────
+# 14. DELETE SLOT
+# ─────────────────────────────────────────────────
+
+# Delete Slot 5
+curl -X DELETE http://localhost:8080/api/v1/bus-slots/5
+
+# Verify deletion
+curl -X GET http://localhost:8080/api/v1/bus-slots/5
+
+# ─────────────────────────────────────────────────
+# 15. ERROR TESTING
+# ─────────────────────────────────────────────────
+
+# Create slot with non-existent route
+curl -X POST http://localhost:8080/api/v1/bus-slots \
+  -H "Content-Type: application/json" \
+  -d '{
+    "routeId": 999,
+    "slotName": "Invalid Route",
+    "pickupTime": "07:00:00",
+    "fromLocation": "Dhaka",
+    "toLocation": "Campus"
+  }'
+
+# Create slot with non-existent bus
 curl -X POST http://localhost:8080/api/v1/bus-slots \
   -H "Content-Type: application/json" \
   -d '{
     "routeId": 1,
     "busId": 999,
     "slotName": "Invalid Bus",
-    "pickupTime": "11:00:00",
-    "dropTime": "21:00:00",
+    "pickupTime": "07:00:00",
     "fromLocation": "Dhaka",
-    "toLocation": "Chittagong",
-    "status": "ACTIVE",
-    "regular": true
-  }'
-```
-
-```bash
-# Try to update slot with non-existent bus (should fail)
-curl -X PUT http://localhost:8080/api/v1/bus-slots/1 \
-  -H "Content-Type: application/json" \
-  -d '{
-    "routeId": 1,
-    "busId": 999,
-    "slotName": "Invalid Bus Update",
-    "pickupTime": "07:30:00",
-    "fromLocation": "Dhaka",
-    "toLocation": "Chittagong",
-    "status": "ACTIVE"
-  }'
-```
-
-### 12. Complete Test Flow with Bus Assignment
-
-```bash
-# 1. Create a new slot with bus assignment
-echo "Creating slot with bus assignment..."
-curl -X POST http://localhost:8080/api/v1/bus-slots \
-  -H "Content-Type: application/json" \
-  -d '{
-    "routeId": 1,
-    "busId": 1,
-    "slotName": "Test Bus Slot",
-    "pickupTime": "08:00:00",
-    "dropTime": "18:00:00",
-    "fromLocation": "Dhaka",
-    "toLocation": "Chittagong",
-    "status": "ACTIVE",
-    "description": "Test slot with bus",
-    "regular": true,
-    "regularDays": "MONDAY"
+    "toLocation": "Campus"
   }'
 
-# 2. Get the created slot to verify bus info
-echo -e "\n\nGetting created slot..."
-curl -X GET http://localhost:8080/api/v1/bus-slots/6 | json_pp
+# Get non-existent slot
+curl -X GET http://localhost:8080/api/v1/bus-slots/999
 
-# 3. Get all slots for bus 1
-echo -e "\n\nGetting all slots for bus 1..."
-curl -X GET http://localhost:8080/api/v1/bus-slots/bus/1 | json_pp
+# ─────────────────────────────────────────────────
+# 16. COMPLETE TEST FLOW - Daily Operations
+# ─────────────────────────────────────────────────
 
-# 4. Update the slot to change bus (create another bus first if needed)
-echo -e "\n\nUpdating slot to change bus..."
-curl -X PUT http://localhost:8080/api/v1/bus-slots/6 \
-  -H "Content-Type: application/json" \
-  -d '{
-    "routeId": 1,
-    "busId": 1,
-    "slotName": "Test Bus Slot Updated",
-    "pickupTime": "08:30:00",
-    "dropTime": "18:30:00",
-    "fromLocation": "Dhaka",
-    "toLocation": "Chittagong",
-    "status": "ACTIVE",
-    "description": "Updated test slot",
-    "regular": true,
-    "regularDays": "MONDAY,WEDNESDAY"
-  }'
+echo "============================================"
+echo "GREEN UNIVERSITY DAILY BUS SLOT OPERATIONS"
+echo "============================================"
 
-# 5. Filter slots by bus
-echo -e "\n\nFiltering slots by bus..."
+# Step 1: Check morning slots
+echo -e "\n[06:00 AM] Checking morning slots..."
+curl -X GET "http://localhost:8080/api/v1/bus-slots/time-range?fromTime=06:00:00&toTime=09:00:00"
+
+# Step 2: Get bus assignments for morning
+echo -e "\n[06:30 AM] Checking bus assignments for morning slots..."
+curl -X GET http://localhost:8080/api/v1/bus-slots/bus/1
+
+# Step 3: Mid-day check
+echo -e "\n[12:00 PM] Checking mid-day slots..."
 curl -X POST http://localhost:8080/api/v1/bus-slots/filter \
   -H "Content-Type: application/json" \
-  -d '{"busId": 1}' | json_pp
+  -d '{
+    "fromTime": "12:00:00",
+    "toTime": "15:00:00",
+    "status": "ACTIVE"
+  }'
 
-# 6. Get statistics by bus
-echo -e "\n\nGetting statistics for bus 1..."
-curl -X GET http://localhost:8080/api/v1/bus-slots/statistics/bus/1 | json_pp
+# Step 4: Evening slots
+echo -e "\n[04:00 PM] Checking evening return slots..."
+curl -X GET "http://localhost:8080/api/v1/bus-slots/time-range?fromTime=16:00:00&toTime=20:00:00"
+
+# Step 5: Update slot status for next day
+echo -e "\n[08:00 PM] Updating slots for next day..."
+curl -X PATCH http://localhost:8080/api/v1/bus-slots/3/status \
+  -H "Content-Type: application/json" \
+  -d '{
+    "status": "ACTIVE",
+    "reason": "Ready for next day service"
+  }'
+
+# Step 6: End of day statistics
+echo -e "\n[09:00 PM] End of day statistics..."
+curl -X GET http://localhost:8080/api/v1/bus-slots/statistics
+curl -X GET http://localhost:8080/api/v1/bus-slots/statistics/bus/1
+
+echo -e "\n============================================"
+echo "BUS SLOT API TESTING COMPLETE"
+echo "============================================"
 ```
 
+## Key Features of Updated Bus Slot Tests:
+
+1. **Green University Context**: All slots are for routes to/from Purbachole, Kanchon campus
+2. **Realistic Slot Names**:
+   - "Morning Dhaka → Campus"
+   - "Evening Campus → Dhaka" 
+   - "Women's Special Morning"
+   - "Friday Holiday Special"
+
+3. **Bus Assignments**:
+   - Some slots with bus assigned (busId: 1, 2)
+   - Some slots without bus assignment
+   - Ability to update/remove bus assignments
+
+4. **Time-based Operations**:
+   - Morning slots (6 AM - 9 AM)
+   - Mid-day slots (12 PM - 3 PM)
+   - Evening slots (4 PM - 8 PM)
+   - Late evening slots (8 PM - 10 PM)
+
+5. **Complete Test Coverage**:
+   - CRUD operations
+   - Filtering by multiple criteria
+   - Statistics by route and bus
+   - Error cases
+   - Daily operations flow
