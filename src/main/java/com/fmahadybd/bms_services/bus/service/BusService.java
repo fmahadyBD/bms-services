@@ -47,7 +47,8 @@ public class BusService {
         // Assign route if routeId is provided
         if (request.getRouteId() != null) {
             Route route = routeRepository.findById(request.getRouteId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Route not found with id: " + request.getRouteId()));
+                    .orElseThrow(
+                            () -> new ResourceNotFoundException("Route not found with id: " + request.getRouteId()));
             busBuilder.route(route);
         }
 
@@ -61,8 +62,8 @@ public class BusService {
         Bus bus = getBusOrThrow(id);
 
         // Check if bus number is being changed and if it's already taken
-        if (!bus.getBusNumber().equals(request.getBusNumber()) && 
-            busRepository.existsByBusNumber(request.getBusNumber())) {
+        if (!bus.getBusNumber().equals(request.getBusNumber()) &&
+                busRepository.existsByBusNumber(request.getBusNumber())) {
             throw new DuplicateResourceException("Bus with number " + request.getBusNumber() + " already exists");
         }
 
@@ -78,7 +79,8 @@ public class BusService {
         // Update route assignment
         if (request.getRouteId() != null) {
             Route route = routeRepository.findById(request.getRouteId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Route not found with id: " + request.getRouteId()));
+                    .orElseThrow(
+                            () -> new ResourceNotFoundException("Route not found with id: " + request.getRouteId()));
             bus.setRoute(route);
         } else {
             bus.setRoute(null);
@@ -265,8 +267,8 @@ public class BusService {
                     break;
                 case "busNumber":
                     String newBusNumber = (String) value;
-                    if (!bus.getBusNumber().equals(newBusNumber) && 
-                        busRepository.existsByBusNumber(newBusNumber)) {
+                    if (!bus.getBusNumber().equals(newBusNumber) &&
+                            busRepository.existsByBusNumber(newBusNumber)) {
                         throw new DuplicateResourceException("Bus with number " + newBusNumber + " already exists");
                     }
                     bus.setBusNumber(newBusNumber);
@@ -320,17 +322,12 @@ public class BusService {
                 .helperName(bus.getHelperName())
                 .driverPhone(bus.getDriverPhone())
                 .helperPhone(bus.getHelperPhone())
+                .routeId(bus.getRoute() != null ? bus.getRoute().getId() : null) // ✅ fixed
                 .createdAt(bus.getCreatedAt())
                 .updatedAt(bus.getUpdatedAt())
                 .createdBy(bus.getCreatedBy())
                 .updatedBy(bus.getUpdatedBy());
 
-        // Add route information if present
-        if (bus.getRoute() != null) {
-            builder.route(convertToRouteResponse(bus.getRoute()));
-        }
-
-        // Add bus slots summary if present
         if (bus.getBusSlots() != null && !bus.getBusSlots().isEmpty()) {
             List<BusResponse.BusSlotSummary> slotSummaries = bus.getBusSlots().stream()
                     .map(this::convertToBusSlotSummary)

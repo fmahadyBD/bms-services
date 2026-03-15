@@ -1,4 +1,3 @@
-
 package com.fmahadybd.bms_services.route.model;
 
 import com.fmahadybd.bms_services.enums.DAY;
@@ -6,7 +5,9 @@ import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Table(name = "route_days")
+@Table(name = "route_days", uniqueConstraints = {
+    @UniqueConstraint(columnNames = {"route_id", "day"})
+})
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter

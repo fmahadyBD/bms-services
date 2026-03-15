@@ -1,7 +1,6 @@
 package com.fmahadybd.bms_services.bus.dto;
 
 import com.fmahadybd.bms_services.bus.enums.BUS_STATUS;
-import com.fmahadybd.bms_services.route.dto.RouteResponse;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -21,7 +20,7 @@ public class BusResponse {
     private String helperName;
     private String driverPhone;
     private String helperPhone;
-    private RouteResponse route;
+    private Long routeId;          
     private List<BusSlotSummary> busSlots;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

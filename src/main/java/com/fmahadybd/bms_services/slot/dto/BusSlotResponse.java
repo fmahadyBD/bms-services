@@ -1,7 +1,7 @@
 package com.fmahadybd.bms_services.slot.dto;
 
-import com.fmahadybd.bms_services.bus.dto.BusResponse;
-import com.fmahadybd.bms_services.route.dto.RouteResponse;
+import com.fmahadybd.bms_services.bus.dto.BusBasicResponse;
+import com.fmahadybd.bms_services.route.dto.RouteBasicResponse;
 import com.fmahadybd.bms_services.slot.emnus.BUS_SLOT_STATUS;
 import lombok.*;
 import java.time.LocalDateTime;
@@ -14,8 +14,8 @@ import java.time.LocalTime;
 @Builder
 public class BusSlotResponse {
     private Long id;
-    private RouteResponse route;
-    private BusResponse bus;  // New field
+    private RouteBasicResponse route;   // ✅ was RouteResponse
+    private BusBasicResponse bus;      
     private String slotName;
     private LocalTime pickupTime;
     private LocalTime dropTime;

@@ -1,13 +1,14 @@
-
 package com.fmahadybd.bms_services.route.model;
 
 import jakarta.persistence.*;
 import lombok.*;
-
 import java.time.LocalTime;
 
 @Entity
-@Table(name = "pickup_points")
+@Table(name = "pickup_points", indexes = {
+    @Index(name = "idx_pickup_route", columnList = "route_id"),
+    @Index(name = "idx_pickup_time", columnList = "pickup_time")
+})
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
@@ -24,14 +25,14 @@ public class PickupPoint {
     private Route route;
 
     @Column(nullable = false, length = 100)
-    private String placeName;       // e.g. "Mirpur 10", "Farmgate"
+    private String placeName;
 
     @Column(length = 255)
-    private String placeDetails;    // e.g. "In front of Mirpur 10 Metro Station"
+    private String placeDetails;
 
     @Column(nullable = false)
-    private LocalTime pickupTime;   // e.g. 07:30
+    private LocalTime pickupTime;
 
     @Column(nullable = false)
-    private Integer stopOrder;      // 1, 2, 3... for ordering stops
+    private Integer stopOrder;
 }

@@ -9,11 +9,13 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
 @Table(name = "routes", indexes = {
-    @Index(name = "idx_route_bus_no", columnList = "busNo", unique = true)
+    @Index(name = "idx_route_bus_no", columnList = "busNo", unique = true),
+    @Index(name = "idx_route_status", columnList = "status")
 })
 @NoArgsConstructor
 @AllArgsConstructor
@@ -39,22 +41,22 @@ public class Route {
     @Column(nullable = false)
     private ROUTE_STATUS status = ROUTE_STATUS.ACTIVE;
 
-    // ── Pickup Points (One Route → Many Pickups) ──────────────────────────
-    @OneToMany(mappedBy = "route", cascade = CascadeType.ALL, orphanRemoval = true)
-    @OrderBy("pickupTime ASC")
-    private List<PickupPoint> pickupPoints;
+    @OneToMany(mappedBy = "route", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @OrderBy("stopOrder ASC")
+    @Builder.Default
+    private List<PickupPoint> pickupPoints = new ArrayList<>();
 
-    // ── Operating Days (One Route → Many Days) ────────────────────────────
-    @OneToMany(mappedBy = "route", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<RouteDay> operatingDays;
+    @OneToMany(mappedBy = "route", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @Builder.Default
+    private List<RouteDay> operatingDays = new ArrayList<>();
 
-    // ── Buses assigned to this route (One Route → Many Buses) ─────────────
     @OneToMany(mappedBy = "route", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<Bus> buses;
+    @Builder.Default
+    private List<Bus> buses = new ArrayList<>();
 
-    // ── Bus Slots for this route (One Route → Many Slots) ─────────────────
     @OneToMany(mappedBy = "route", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<BusSlot> busSlots;
+    @Builder.Default
+    private List<BusSlot> busSlots = new ArrayList<>();
 
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
@@ -63,4 +65,10 @@ public class Route {
     @UpdateTimestamp
     @Column(nullable = false)
     private LocalDateTime updatedAt;
+
+    @Column
+    private Long createdBy;
+
+    @Column
+    private Long updatedBy;
 }

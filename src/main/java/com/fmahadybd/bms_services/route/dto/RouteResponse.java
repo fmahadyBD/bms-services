@@ -21,9 +21,11 @@ public class RouteResponse {
     private String routeLine;
     private ROUTE_STATUS status;
     private List<PickupPointResponse> pickupPoints;
-    private List<DAY> operatingDays;  // Changed from List<RouteDayResponse> to List<DAY>
+    private List<DAY> operatingDays;
     private List<BusResponse> buses;
     private List<BusSlotResponse> busSlots;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private Long createdBy;
+    private Long updatedBy;
 }
