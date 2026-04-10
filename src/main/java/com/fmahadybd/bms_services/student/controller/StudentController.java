@@ -18,14 +18,13 @@ public class StudentController {
 
     private final StudentService studentService;
 
-
     // ── Register Student (Manager only) ─────────────────────────────────
     // @PostMapping("/register")
     // @PreAuthorize("hasRole('MANAGER')")
     // public ResponseEntity<StudentResponse> register(
-    //         @Valid @RequestBody RegisterStudentRequest req) {
-    //     return ResponseEntity.status(HttpStatus.CREATED)
-    //             .body(studentService.register(req));
+    // @Valid @RequestBody RegisterStudentRequest req) {
+    // return ResponseEntity.status(HttpStatus.CREATED)
+    // .body(studentService.register(req));
     // }
 
     // ── Get All Students ─────────────────────────────────────────────────
@@ -37,7 +36,8 @@ public class StudentController {
 
     // ── Get Student by ID ────────────────────────────────────────────────
     @GetMapping("/{studentId}")
-    @PreAuthorize("hasRole('MANAGER') or (hasRole('STUDENT') and @studentSecurity.isSelf(authentication, #studentId))")
+    // @PreAuthorize("hasRole('MANAGER') or (hasRole('STUDENT') and
+    // @studentSecurity.isSelf(authentication, #studentId))")
     public ResponseEntity<StudentResponse> getByStudentId(
             @PathVariable String studentId) {
         return ResponseEntity.ok(studentService.findByStudentId(studentId));
@@ -45,7 +45,7 @@ public class StudentController {
 
     // ── Get Student by Email ─────────────────────────────────────────────
     @GetMapping("/search/email")
-    @PreAuthorize("hasRole('MANAGER')")
+    // @PreAuthorize("hasRole('MANAGER')")
     public ResponseEntity<StudentResponse> getByEmail(
             @RequestParam String email) {
         return ResponseEntity.ok(studentService.findByEmail(email));
@@ -53,7 +53,7 @@ public class StudentController {
 
     // ── Get Student by Phone ─────────────────────────────────────────────
     @GetMapping("/search/phone")
-    @PreAuthorize("hasRole('MANAGER')")
+    // @PreAuthorize("hasRole('MANAGER')")
     public ResponseEntity<StudentResponse> getByPhone(
             @RequestParam String phone) {
         return ResponseEntity.ok(studentService.findByPhoneNumber(phone));
@@ -61,7 +61,7 @@ public class StudentController {
 
     // ── Get Students by Department and Batch ─────────────────────────────
     @GetMapping("/department/{department}/batch/{batch}")
-    @PreAuthorize("hasRole('MANAGER')")
+    // @PreAuthorize("hasRole('MANAGER')")
     public ResponseEntity<List<StudentResponse>> getByDepartmentAndBatch(
             @PathVariable String department,
             @PathVariable String batch) {
@@ -70,7 +70,7 @@ public class StudentController {
 
     // ── Get Students by Route ────────────────────────────────────────────
     @GetMapping("/route/{routeId}")
-    @PreAuthorize("hasRole('MANAGER')")
+    // @PreAuthorize("hasRole('MANAGER')")
     public ResponseEntity<List<StudentResponse>> getByRoute(
             @PathVariable Long routeId) {
         return ResponseEntity.ok(studentService.findByRoute(routeId));
@@ -78,7 +78,8 @@ public class StudentController {
 
     // ── Update Student ───────────────────────────────────────────────────
     @PatchMapping("/{studentId}")
-    @PreAuthorize("hasRole('MANAGER') or (hasRole('STUDENT') and @studentSecurity.isSelf(authentication, #studentId))")
+    // @PreAuthorize("hasRole('MANAGER') or (hasRole('STUDENT') and
+    // @studentSecurity.isSelf(authentication, #studentId))")
     public ResponseEntity<StudentResponse> update(
             @PathVariable String studentId,
             @Valid @RequestBody UpdateStudentRequest req) {
@@ -87,7 +88,7 @@ public class StudentController {
 
     // ── Assign Route to Student ──────────────────────────────────────────
     @PatchMapping("/{studentId}/assign-route/{routeId}")
-    @PreAuthorize("hasRole('MANAGER')")
+    // @PreAuthorize("hasRole('MANAGER')")
     public ResponseEntity<StudentResponse> assignRoute(
             @PathVariable String studentId,
             @PathVariable Long routeId) {
@@ -96,7 +97,7 @@ public class StudentController {
 
     // ── Remove Route from Student ────────────────────────────────────────
     @PatchMapping("/{studentId}/remove-route")
-    @PreAuthorize("hasRole('MANAGER')")
+    // @PreAuthorize("hasRole('MANAGER')")
     public ResponseEntity<StudentResponse> removeRoute(
             @PathVariable String studentId) {
         return ResponseEntity.ok(studentService.removeRoute(studentId));
@@ -104,7 +105,8 @@ public class StudentController {
 
     // ── Get Student's Routines ───────────────────────────────────────────
     @GetMapping("/{studentId}/routines")
-    @PreAuthorize("hasRole('MANAGER') or (hasRole('STUDENT') and @studentSecurity.isSelf(authentication, #studentId))")
+    // @PreAuthorize("hasRole('MANAGER') or (hasRole('STUDENT') and
+    // @studentSecurity.isSelf(authentication, #studentId))")
     public ResponseEntity<List<StudentRoutineResponse>> getStudentRoutines(
             @PathVariable String studentId) {
         return ResponseEntity.ok(studentService.getStudentRoutines(studentId));
@@ -112,7 +114,7 @@ public class StudentController {
 
     // ── Block Student ────────────────────────────────────────────────────
     @PatchMapping("/{studentId}/block")
-    @PreAuthorize("hasRole('MANAGER')")
+    // @PreAuthorize("hasRole('MANAGER')")
     public ResponseEntity<StudentResponse> blockStudent(
             @PathVariable String studentId) {
         return ResponseEntity.ok(studentService.setBlockStatus(studentId, true));
@@ -120,7 +122,7 @@ public class StudentController {
 
     // ── Unblock Student ──────────────────────────────────────────────────
     @PatchMapping("/{studentId}/unblock")
-    @PreAuthorize("hasRole('MANAGER')")
+    // @PreAuthorize("hasRole('MANAGER')")
     public ResponseEntity<StudentResponse> unblockStudent(
             @PathVariable String studentId) {
         return ResponseEntity.ok(studentService.setBlockStatus(studentId, false));
@@ -128,19 +130,23 @@ public class StudentController {
 
     // ── Change Password ──────────────────────────────────────────────────
     @PatchMapping("/{studentId}/change-password")
-    @PreAuthorize("hasRole('STUDENT') and @studentSecurity.isSelf(authentication, #studentId)")
-    public ResponseEntity<Void> changePassword(
+    public ResponseEntity<?> changePassword(
             @PathVariable String studentId,
             @Valid @RequestBody ChangePasswordRequest req) {
-        studentService.changePassword(studentId, req.getOldPassword(), req.getNewPassword());
-        return ResponseEntity.ok().build();
+        try {
+            studentService.changePassword(studentId, req.getOldPassword(), req.getNewPassword());
+            return ResponseEntity.ok().body("Password changed successfully");
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
     // ── Delete Student ───────────────────────────────────────────────────
     @DeleteMapping("/{studentId}")
-    @PreAuthorize("hasRole('MANAGER')")
+    // @PreAuthorize("hasRole('MANAGER')")
     public ResponseEntity<Void> deleteStudent(@PathVariable String studentId) {
         studentService.deleteStudent(studentId);
         return ResponseEntity.noContent().build();
     }
+
 }

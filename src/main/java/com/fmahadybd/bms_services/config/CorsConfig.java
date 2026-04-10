@@ -1,6 +1,5 @@
 package com.fmahadybd.bms_services.config;
 
-
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -17,7 +16,7 @@ public class CorsConfig {
     @Value("${cors.allowed.origins:*}")
     private String allowedOrigins;
 
-    @Value("${cors.allowed.methods:GET,POST,PUT,DELETE,OPTIONS}")
+    @Value("${cors.allowed.methods:GET,POST,PUT,PATCH,DELETE,OPTIONS}")
     private String allowedMethods;
 
     @Value("${cors.allowed.headers:Authorization,Content-Type}")

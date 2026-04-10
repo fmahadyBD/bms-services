@@ -30,45 +30,42 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            .cors(cors -> cors.configurationSource(corsConfigurationSource))
-            .csrf(csrf -> csrf.disable())
-            .authorizeHttpRequests(req -> req
-                    .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                    .requestMatchers("/uploads/**").permitAll()
-                    .requestMatchers("/images/**", "/css/**", "/js/**", "/webjars/**").permitAll()
-                    
-                    // Student specific endpoints
-                   // .requestMatchers("/api/students/**").hasRole("STUDENT")
-                    //.requestMatchers("/api/courses/**").hasAnyRole("STUDENT", "MANAGER")
-                    
-                    // Manager specific endpoints
-                    .requestMatchers("/api/managers/**").hasRole("MANAGER")
-                    .requestMatchers("/api/reports/**").hasRole("MANAGER")
-                    
-                    // Public endpoints
-                    .requestMatchers(
-                            "/auth/**",
-                            "/v3/api-docs/**",
-                            "/swagger-ui/**",
-                            "/swagger-ui.html",
-                            "/api/v1/routes/**",
-                            "/api/v1/bus-requests/**",
-                            "/api/v1/bus-slots/**",
-                            "/api/v1/buses/**",
-                            "/api/v1/surveys/**",
-                            "/api/v1/students/**",
-                            "/api/courses/**"
-                    ).permitAll()
-                    .anyRequest().authenticated()
-            )
-            .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .authenticationProvider(authenticationProvider)
-            .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
-            .logout(logout -> logout
-                    .logoutUrl("/auth/logout")
-                    .addLogoutHandler(logoutService)
-                    .logoutSuccessHandler((req, res, auth) -> res.setStatus(HttpStatus.OK.value()))
-            );
+                .cors(cors -> cors.configurationSource(corsConfigurationSource))
+                .csrf(csrf -> csrf.disable())
+                // SecurityConfig.java
+                .authorizeHttpRequests(req -> req
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        .requestMatchers("/uploads/**").permitAll()
+                        .requestMatchers("/images/**", "/css/**", "/js/**", "/webjars/**").permitAll()
+                        .requestMatchers("/api/managers/**").hasRole("MANAGER")
+                        .requestMatchers("/api/reports/**").hasRole("MANAGER")
+                        .requestMatchers(
+                                "/auth/**",
+                                "/v3/api-docs/**",
+                                "/swagger-ui/**",
+                                "/swagger-ui.html",
+                                "/api/v1/routes/**",
+                                "/api/v1/bus-requests/**",
+                                "/api/v1/bus-slots/**",
+                                "/api/v1/buses/**",
+                                "/api/v1/surveys/**",
+                                "/api/courses/**")
+                        .permitAll()
+                        // Student read endpoints — public
+                        .requestMatchers(HttpMethod.GET, "/api/v1/students/**").permitAll()
+                        // Student write endpoints — must be authenticated
+                        .requestMatchers(HttpMethod.PATCH, "/api/v1/students/**").authenticated()
+                        .requestMatchers(HttpMethod.DELETE, "/api/v1/students/**").authenticated()
+                        .anyRequest().authenticated()
+
+                )
+                .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authenticationProvider(authenticationProvider)
+                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+                .logout(logout -> logout
+                        .logoutUrl("/auth/logout")
+                        .addLogoutHandler(logoutService)
+                        .logoutSuccessHandler((req, res, auth) -> res.setStatus(HttpStatus.OK.value())));
 
         return http.build();
     }

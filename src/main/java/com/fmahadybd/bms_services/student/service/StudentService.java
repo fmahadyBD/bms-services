@@ -21,9 +21,11 @@ import com.fmahadybd.bms_services.student.model.Student;
 import com.fmahadybd.bms_services.student.repository.StudentRepository;
 
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @AllArgsConstructor
+@Slf4j
 public class StudentService {
 
     private final StudentRepository studentRepository;
@@ -31,10 +33,6 @@ public class StudentService {
     private final RoutineRepository routineRepository;
     private final PasswordEncoder passwordEncoder;
 
-
-
-
-    
     // ── Find by Student ID ───────────────────────────────────────────────
     public StudentResponse findByStudentId(String studentId) {
         return toResponse(getStudentOrThrow(studentId));
@@ -64,7 +62,7 @@ public class StudentService {
     public List<StudentResponse> findByRoute(Long routeId) {
         Route route = routeRepository.findById(routeId)
                 .orElseThrow(() -> new ResourceNotFoundException("Route not found: " + routeId));
-        
+
         // You'll need to add this method to repository
         return studentRepository.findByRoute(route).stream()
                 .map(this::toResponse)
@@ -97,9 +95,12 @@ public class StudentService {
             student.setPhoneNumber(req.getPhoneNumber());
         }
 
-        if (req.getName() != null) student.setName(req.getName());
-        if (req.getAddress() != null) student.setAddress(req.getAddress());
-        if (req.getShift() != null) student.setShift(req.getShift());
+        if (req.getName() != null)
+            student.setName(req.getName());
+        if (req.getAddress() != null)
+            student.setAddress(req.getAddress());
+        if (req.getShift() != null)
+            student.setShift(req.getShift());
 
         return toResponse(studentRepository.save(student));
     }
@@ -126,7 +127,7 @@ public class StudentService {
     // ── Get Student's Routines ───────────────────────────────────────────
     public List<StudentRoutineResponse> getStudentRoutines(String studentId) {
         Student student = getStudentOrThrow(studentId);
-        
+
         return student.getRoutines().stream()
                 .map(this::toRoutineResponse)
                 .collect(Collectors.toList());
@@ -150,27 +151,37 @@ public class StudentService {
     // ── Change Password ──────────────────────────────────────────────────
     @Transactional
     public void changePassword(String studentId, String oldPassword, String newPassword) {
-        Student student = getStudentOrThrow(studentId);
-        
-        if (!passwordEncoder.matches(oldPassword, student.getPassword())) {
-            throw new IllegalArgumentException("Old password is incorrect");
+        try {
+            log.info("Attempting to change password for student: {}", studentId);
+            Student student = getStudentOrThrow(studentId);
+
+            if (!passwordEncoder.matches(oldPassword, student.getPassword())) {
+                log.warn("Old password incorrect for student: {}", studentId);
+                throw new IllegalArgumentException("Old password is incorrect");
+            }
+
+            String encodedPassword = passwordEncoder.encode(newPassword);
+            student.setPassword(encodedPassword);
+            studentRepository.save(student);
+            log.info("Password changed successfully for student: {}", studentId);
+        } catch (Exception e) {
+            log.error("Error changing password for student {}: {}", studentId, e.getMessage());
+            throw e;
         }
-        
-        student.setPassword(passwordEncoder.encode(newPassword));
-        studentRepository.save(student);
     }
 
     // ── Helper Methods ───────────────────────────────────────────────────
     // private Student getStudentOrThrow(String studentId) {
-    //     return studentRepository.findByStudentId(studentId)
-    //             .orElseThrow(() -> new ResourceNotFoundException("Student not found: " + studentId));
+    // return studentRepository.findByStudentId(studentId)
+    // .orElseThrow(() -> new ResourceNotFoundException("Student not found: " +
+    // studentId));
     // }
 
     private Student getStudentOrThrow(String studentId) {
-    // Try to find by studentId directly
-    return studentRepository.findByStudentId(studentId)
-            .orElseThrow(() -> new ResourceNotFoundException("Student not found: " + studentId));
-}
+        // Try to find by studentId directly
+        return studentRepository.findByStudentId(studentId)
+                .orElseThrow(() -> new ResourceNotFoundException("Student not found: " + studentId));
+    }
 
     private StudentResponse toResponse(Student s) {
         return StudentResponse.builder()
