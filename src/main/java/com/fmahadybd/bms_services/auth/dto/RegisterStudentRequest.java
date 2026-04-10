@@ -12,8 +12,9 @@ import lombok.*;
 public class RegisterStudentRequest {
 
     @NotBlank(message = "Student ID is required")
-    @Pattern(regexp = "^[A-Z]{2,10}-\\d{4}-\\d{3}$",
-             message = "Student ID format invalid. Expected: DEPT-YEAR-SEQ (e.g. CSE-2021-001)")
+    // Updated pattern to accept numeric IDs like 22002469
+    @Pattern(regexp = "^[A-Z]{2,10}-\\d{4}-\\d{3}$|^\\d{8,10}$",
+             message = "Student ID format invalid. Expected: DEPT-YEAR-SEQ (e.g. CSE-2021-001) or numeric ID (e.g., 22002469)")
     private String studentId;
 
     @NotBlank(message = "Name is required")
@@ -39,8 +40,9 @@ public class RegisterStudentRequest {
     private String department;
 
     @NotBlank(message = "Batch is required")
-    @Pattern(regexp = "^\\d{4}$|^(Spring|Summer|Fall)-\\d{4}$",
-             message = "Batch format invalid. Expected: '2021' or 'Spring-2022'")
+    // Updated pattern to accept numeric batch like 221
+    @Pattern(regexp = "^\\d{3,4}$|^(Spring|Summer|Fall)-\\d{4}$",
+             message = "Batch format invalid. Expected: '221', '2021', or 'Spring-2022'")
     private String batch;
 
     @NotNull(message = "Gender is required")

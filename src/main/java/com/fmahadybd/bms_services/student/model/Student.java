@@ -32,8 +32,7 @@ public class Student implements BaseUser {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-    @Column(nullable = false, unique = true, length = 20)
+    @Column(nullable = false, unique = true, length = 50) 
     private String studentId;
 
     @Column(nullable = false, length = 100)

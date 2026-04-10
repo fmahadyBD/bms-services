@@ -161,10 +161,16 @@ public class StudentService {
     }
 
     // ── Helper Methods ───────────────────────────────────────────────────
+    // private Student getStudentOrThrow(String studentId) {
+    //     return studentRepository.findByStudentId(studentId)
+    //             .orElseThrow(() -> new ResourceNotFoundException("Student not found: " + studentId));
+    // }
+
     private Student getStudentOrThrow(String studentId) {
-        return studentRepository.findByStudentId(studentId)
-                .orElseThrow(() -> new ResourceNotFoundException("Student not found: " + studentId));
-    }
+    // Try to find by studentId directly
+    return studentRepository.findByStudentId(studentId)
+            .orElseThrow(() -> new ResourceNotFoundException("Student not found: " + studentId));
+}
 
     private StudentResponse toResponse(Student s) {
         return StudentResponse.builder()
