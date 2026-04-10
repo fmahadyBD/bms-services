@@ -1,0 +1,28 @@
+#!/bin/bash
+
+# Base URL
+BASE_URL="http://localhost:8080"
+
+# Common password for all students
+PASSWORD="Pass@1234"
+
+# Create 10 students
+for i in {1..10}
+do
+    curl -X POST "${BASE_URL}/auth/register/student" \
+      -H "Content-Type: application/json" \
+      -d "{
+        \"studentId\": \"CSE-2021-00${i}\",
+        \"name\": \"Student ${i}\",
+        \"email\": \"student${i}@example.com\",
+        \"phoneNumber\": \"+880171234567${i}\",
+        \"address\": \"House ${i}, Road ${i}, Dhanmondi, Dhaka\",
+        \"department\": \"Computer Science\",
+        \"batch\": \"2021\",
+        \"gender\": \"MALE\",
+        \"shift\": \"Morning\",
+        \"password\": \"${PASSWORD}\"
+      }"
+    
+    echo " - Created student ${i}"
+done

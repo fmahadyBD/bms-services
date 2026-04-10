@@ -38,8 +38,8 @@ public class SecurityConfig {
                     .requestMatchers("/images/**", "/css/**", "/js/**", "/webjars/**").permitAll()
                     
                     // Student specific endpoints
-                    .requestMatchers("/api/students/**").hasRole("STUDENT")
-                    .requestMatchers("/api/courses/**").hasAnyRole("STUDENT", "MANAGER")
+                   // .requestMatchers("/api/students/**").hasRole("STUDENT")
+                    //.requestMatchers("/api/courses/**").hasAnyRole("STUDENT", "MANAGER")
                     
                     // Manager specific endpoints
                     .requestMatchers("/api/managers/**").hasRole("MANAGER")
@@ -55,7 +55,9 @@ public class SecurityConfig {
                             "/api/v1/bus-requests/**",
                             "/api/v1/bus-slots/**",
                             "/api/v1/buses/**",
-                            "/api/v1/surveys/**"
+                            "/api/v1/surveys/**",
+                            "/api/v1/students/**",
+                            "/api/courses/**"
                     ).permitAll()
                     .anyRequest().authenticated()
             )
