@@ -16,7 +16,7 @@ import java.util.List;
 public class UpdateRouteRequest {
 
     @NotBlank(message = "Bus number is required")
-    @Pattern(regexp = "^BUS-\\d{3}$", message = "Bus No must follow format: BUS-001, BUS-002, etc.")
+    // @Pattern(regexp = "^BUS-\\d{3}$", message = "Bus No must follow format: BUS-001, BUS-002, etc.")
     private String busNo;
 
     @NotBlank(message = "Route name is required")
