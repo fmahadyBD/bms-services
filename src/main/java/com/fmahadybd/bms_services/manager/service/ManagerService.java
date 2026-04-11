@@ -106,10 +106,14 @@ public class ManagerService {
             manager.setPhoneNumber(request.getPhoneNumber());
         }
 
-        if (request.getName() != null) manager.setName(request.getName());
-        if (request.getAddress() != null) manager.setAddress(request.getAddress());
-        if (request.getDepartment() != null) manager.setDepartment(request.getDepartment());
-        if (request.getDesignation() != null) manager.setDesignation(request.getDesignation());
+        if (request.getName() != null)
+            manager.setName(request.getName());
+        if (request.getAddress() != null)
+            manager.setAddress(request.getAddress());
+        if (request.getDepartment() != null)
+            manager.setDepartment(request.getDepartment());
+        if (request.getDesignation() != null)
+            manager.setDesignation(request.getDesignation());
 
         return convertToResponse(managerRepository.save(manager));
     }
@@ -240,20 +244,13 @@ public class ManagerService {
         return managers.stream().map(this::convertToResponse).collect(Collectors.toList());
     }
 
-    // ── Get Manager Statistics ────────────────────────────────────────────
+    // ManagerService.java — replace getManagerStatistics()
     public ManagerStatistics getManagerStatistics() {
-        long totalManagers = managerRepository.count();
-        long activeManagers = managerRepository.findAll().stream()
-                .filter(m -> !m.isBlocked())
-                .count();
-        long blockedManagers = managerRepository.findAll().stream()
-                .filter(Manager::isBlocked)
-                .count();
-
+        Object[] stats = managerRepository.getManagerStats();
         return ManagerStatistics.builder()
-                .totalManagers(totalManagers)
-                .activeManagers(activeManagers)
-                .blockedManagers(blockedManagers)
+                .totalManagers((Long) stats[0])
+                .activeManagers((Long) stats[1])
+                .blockedManagers((Long) stats[2])
                 .build();
     }
 

@@ -3,19 +3,20 @@ package com.fmahadybd.bms_services.student.service;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.fmahadybd.bms_services.auth.dto.RegisterStudentRequest;
 import com.fmahadybd.bms_services.exception.DuplicateResourceException;
 import com.fmahadybd.bms_services.exception.ResourceNotFoundException;
 import com.fmahadybd.bms_services.route.model.Route;
 import com.fmahadybd.bms_services.route.repository.RouteRepository;
 import com.fmahadybd.bms_services.routine.model.ClassRoutine;
-import com.fmahadybd.bms_services.routine.repository.RoutineRepository;
 import com.fmahadybd.bms_services.student.dto.StudentResponse;
 import com.fmahadybd.bms_services.student.dto.StudentRoutineResponse;
+import com.fmahadybd.bms_services.student.dto.StudentSummaryResponse;
 import com.fmahadybd.bms_services.student.dto.UpdateStudentRequest;
 import com.fmahadybd.bms_services.student.model.Student;
 import com.fmahadybd.bms_services.student.repository.StudentRepository;
@@ -30,7 +31,6 @@ public class StudentService {
 
     private final StudentRepository studentRepository;
     private final RouteRepository routeRepository;
-    private final RoutineRepository routineRepository;
     private final PasswordEncoder passwordEncoder;
 
     // ── Find by Student ID ───────────────────────────────────────────────
@@ -52,7 +52,6 @@ public class StudentService {
 
     // ── Find by Department and Batch ─────────────────────────────────────
     public List<StudentResponse> findByDepartmentAndBatch(String department, String batch) {
-        // You'll need to add this method to repository
         return studentRepository.findByDepartmentAndBatch(department, batch).stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
@@ -62,18 +61,20 @@ public class StudentService {
     public List<StudentResponse> findByRoute(Long routeId) {
         Route route = routeRepository.findById(routeId)
                 .orElseThrow(() -> new ResourceNotFoundException("Route not found: " + routeId));
-
-        // You'll need to add this method to repository
         return studentRepository.findByRoute(route).stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
     }
 
-    // ── Get All Students ─────────────────────────────────────────────────
-    public List<StudentResponse> findAll() {
-        return studentRepository.findAll().stream()
-                .map(this::toResponse)
-                .collect(Collectors.toList());
+    // ── NEW: Paginated summary for fast listing ──────────────────────────
+    public Page<StudentSummaryResponse> findAllSummary(Pageable pageable) {
+        try {
+            log.info("Fetching students summary with page: {}, size: {}", pageable.getPageNumber(), pageable.getPageSize());
+            return studentRepository.findSummaryPage(pageable);
+        } catch (Exception e) {
+            log.error("Error fetching students summary: {}", e.getMessage(), e);
+            throw new RuntimeException("Failed to fetch students: " + e.getMessage(), e);
+        }
     }
 
     // ── Update Student ───────────────────────────────────────────────────
@@ -81,14 +82,12 @@ public class StudentService {
     public StudentResponse update(String studentId, UpdateStudentRequest req) {
         Student student = getStudentOrThrow(studentId);
 
-        // Check email uniqueness if being updated
         if (req.getEmail() != null && !req.getEmail().equals(student.getEmail())) {
             if (studentRepository.existsByEmail(req.getEmail()))
                 throw new DuplicateResourceException("Email already registered: " + req.getEmail());
             student.setEmail(req.getEmail());
         }
 
-        // Check phone uniqueness if being updated
         if (req.getPhoneNumber() != null && !req.getPhoneNumber().equals(student.getPhoneNumber())) {
             if (studentRepository.existsByPhoneNumber(req.getPhoneNumber()))
                 throw new DuplicateResourceException("Phone number already registered: " + req.getPhoneNumber());
@@ -111,7 +110,6 @@ public class StudentService {
         Student student = getStudentOrThrow(studentId);
         Route route = routeRepository.findById(routeId)
                 .orElseThrow(() -> new ResourceNotFoundException("Route not found: " + routeId));
-
         student.setRoute(route);
         return toResponse(studentRepository.save(student));
     }
@@ -127,7 +125,6 @@ public class StudentService {
     // ── Get Student's Routines ───────────────────────────────────────────
     public List<StudentRoutineResponse> getStudentRoutines(String studentId) {
         Student student = getStudentOrThrow(studentId);
-
         return student.getRoutines().stream()
                 .map(this::toRoutineResponse)
                 .collect(Collectors.toList());
@@ -146,6 +143,7 @@ public class StudentService {
     public void deleteStudent(String studentId) {
         Student student = getStudentOrThrow(studentId);
         studentRepository.delete(student);
+        log.info("Student deleted successfully: {}", studentId);
     }
 
     // ── Change Password ──────────────────────────────────────────────────
@@ -171,14 +169,7 @@ public class StudentService {
     }
 
     // ── Helper Methods ───────────────────────────────────────────────────
-    // private Student getStudentOrThrow(String studentId) {
-    // return studentRepository.findByStudentId(studentId)
-    // .orElseThrow(() -> new ResourceNotFoundException("Student not found: " +
-    // studentId));
-    // }
-
     private Student getStudentOrThrow(String studentId) {
-        // Try to find by studentId directly
         return studentRepository.findByStudentId(studentId)
                 .orElseThrow(() -> new ResourceNotFoundException("Student not found: " + studentId));
     }

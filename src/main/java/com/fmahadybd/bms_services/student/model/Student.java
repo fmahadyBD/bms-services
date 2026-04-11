@@ -1,11 +1,13 @@
 package com.fmahadybd.bms_services.student.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fmahadybd.bms_services.auth.BaseUser;
 import com.fmahadybd.bms_services.enums.GENDER;
 import com.fmahadybd.bms_services.route.model.Route;
 import com.fmahadybd.bms_services.routine.model.ClassRoutine;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.springframework.security.core.GrantedAuthority;
@@ -20,8 +22,21 @@ import java.util.List;
 @Table(name = "students", indexes = {
         @Index(name = "idx_student_id", columnList = "studentId", unique = true),
         @Index(name = "idx_student_email", columnList = "email", unique = true),
-        @Index(name = "idx_student_phone", columnList = "phoneNumber", unique = true)
+        @Index(name = "idx_student_phone", columnList = "phoneNumber", unique = true),
+        @Index(name = "idx_student_route", columnList = "route_id"),
+        @Index(name = "idx_student_department_batch", columnList = "department, batch")
 })
+@NamedEntityGraph(name = "Student.withRoute", 
+    attributeNodes = @NamedAttributeNode("route"))
+@NamedEntityGraph(name = "Student.withRouteAndRoutines", 
+    attributeNodes = {
+        @NamedAttributeNode("route"),
+        @NamedAttributeNode(value = "routines", subgraph = "routineWithRoute")
+    },
+    subgraphs = {
+        @NamedSubgraph(name = "routineWithRoute", 
+            attributeNodes = @NamedAttributeNode("route"))
+    })
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
@@ -32,7 +47,8 @@ public class Student implements BaseUser {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    @Column(nullable = false, unique = true, length = 50) 
+    
+    @Column(nullable = false, unique = true, length = 50)
     private String studentId;
 
     @Column(nullable = false, length = 100)
@@ -70,7 +86,11 @@ public class Student implements BaseUser {
     @JoinColumn(name = "route_id")
     private Route route;
 
-    @ManyToMany(mappedBy = "students")
+    // ✅ FIXED: Added mappedBy to properly define the relationship
+    @ManyToMany(fetch = FetchType.LAZY, mappedBy = "students")
+    @BatchSize(size = 25)  // Batch loading to reduce N+1 queries
+    @JsonIgnore
+    @Builder.Default
     private List<ClassRoutine> routines = new ArrayList<>();
 
     @CreationTimestamp

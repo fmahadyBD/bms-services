@@ -6,6 +6,7 @@ import com.fmahadybd.bms_services.route.model.Route;
 import com.fmahadybd.bms_services.student.model.Student;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -17,8 +18,14 @@ import java.util.List;
 @Entity
 @Table(name = "class_routines", indexes = {
     @Index(name = "idx_routine_day", columnList = "day"),
-    @Index(name = "idx_routine_batch", columnList = "batch,department")
+    @Index(name = "idx_routine_batch", columnList = "batch,department"),
+    @Index(name = "idx_routine_department_batch_day", columnList = "department, batch, day"),
+    @Index(name = "idx_routine_route", columnList = "route_id")
 })
+@NamedEntityGraph(name = "ClassRoutine.withStudents", 
+    attributeNodes = @NamedAttributeNode("students"))
+@NamedEntityGraph(name = "ClassRoutine.withRoute", 
+    attributeNodes = @NamedAttributeNode("route"))
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
@@ -67,14 +74,21 @@ public class ClassRoutine {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "route_id")
-    private Route route;  // Optional: if class needs bus route info
+    private Route route;
 
-    @ManyToMany
+    // ✅ This is the owning side of the relationship
+    @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
         name = "routine_students",
         joinColumns = @JoinColumn(name = "routine_id"),
-        inverseJoinColumns = @JoinColumn(name = "student_id")
+        inverseJoinColumns = @JoinColumn(name = "student_id"),
+        indexes = {
+            @Index(name = "idx_routine_students_routine", columnList = "routine_id"),
+            @Index(name = "idx_routine_students_student", columnList = "student_id")
+        }
     )
+    @BatchSize(size = 25)
+    @Builder.Default
     private List<Student> students = new ArrayList<>();
 
     @CreationTimestamp
