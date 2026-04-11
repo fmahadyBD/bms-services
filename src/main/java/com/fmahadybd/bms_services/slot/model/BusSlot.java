@@ -62,7 +62,7 @@ public class BusSlot {
     @Column(nullable = false)
     private boolean isRegular = true;
 
-    @Column(length = 50)
+    @Column(length = 500)
     private String regularDays;
 
     @CreationTimestamp
