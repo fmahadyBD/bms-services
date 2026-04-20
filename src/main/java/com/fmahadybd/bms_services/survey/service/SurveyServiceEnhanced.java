@@ -1,4 +1,4 @@
-// com/fmahadybd/bms_services/survey/service/SurveyService.java - COMPLETE FIXED VERSION
+// com/fmahadybd/bms_services/survey/service/SurveyServiceEnhanced.java - COMPLETELY FIXED
 package com.fmahadybd.bms_services.survey.service;
 
 import com.fmahadybd.bms_services.bus.dto.BusBasicResponse;
@@ -28,7 +28,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -36,7 +35,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class SurveyService {
+public class SurveyServiceEnhanced {
 
     private final SurveyRepository surveyRepository;
     private final SurveyResponseRepository responseRepository;
@@ -48,161 +47,6 @@ public class SurveyService {
     private final ObjectMapper objectMapper;
 
     // ─────────────────────────────────────────────────
-    // HELPER METHODS FOR JSON PARSING
-    // ─────────────────────────────────────────────────
-
-    private Map<String, Object> parseResponseData(String responseDataJson) {
-        if (responseDataJson == null || responseDataJson.isEmpty()) {
-            return new HashMap<>();
-        }
-        try {
-            return objectMapper.readValue(responseDataJson, new TypeReference<Map<String, Object>>() {});
-        } catch (JsonProcessingException e) {
-            log.error("Failed to parse response data", e);
-            return new HashMap<>();
-        }
-    }
-
-    private String toResponseDataJson(Map<String, Object> responseData) {
-        try {
-            return objectMapper.writeValueAsString(responseData);
-        } catch (JsonProcessingException e) {
-            log.error("Failed to convert response data to JSON", e);
-            return "{}";
-        }
-    }
-
-    // ─────────────────────────────────────────────────
-    // SURVEY CRUD OPERATIONS
-    // ─────────────────────────────────────────────────
-
-    @Transactional
-    public SurveyDetailResponse createSurvey(SurveyRequest request, Long managerId) {
-        log.info("Creating survey: {}", request.getTitle());
-
-        Survey survey = Survey.builder()
-                .title(request.getTitle())
-                .description(request.getDescription())
-                .status(request.getStatus() != null ? request.getStatus() : SurveyStatus.DRAFT)
-                .startDate(request.getStartDate())
-                .endDate(request.getEndDate())
-                .academicYear(request.getAcademicYear())
-                .semester(request.getSemester())
-                .targetResponses(request.getTargetResponses())
-                .totalResponses(0)
-                .isActive(true)
-                .createdBy(managerId)
-                .updatedBy(managerId)
-                .build();
-
-        // Add questions
-        if (request.getQuestions() != null) {
-            List<SurveyQuestion> questions = new ArrayList<>();
-            for (SurveyQuestionRequest q : request.getQuestions()) {
-                questions.add(SurveyQuestion.builder()
-                        .survey(survey)
-                        .questionText(q.getQuestionText())
-                        .questionType(q.getQuestionType())
-                        .options(q.getOptions())
-                        .displayOrder(q.getDisplayOrder())
-                        .required(q.isRequired())
-                        .isActive(true)
-                        .build());
-            }
-            survey.setQuestions(questions);
-        }
-
-        // Add available routes and slots
-        if (request.getAvailableRouteIds() != null && !request.getAvailableRouteIds().isEmpty()) {
-            List<Route> routes = routeRepository.findAllById(request.getAvailableRouteIds());
-            survey.setAvailableRoutes(routes);
-        }
-
-        if (request.getAvailableSlotIds() != null && !request.getAvailableSlotIds().isEmpty()) {
-            List<BusSlot> slots = busSlotRepository.findAllById(request.getAvailableSlotIds());
-            survey.setAvailableSlots(slots);
-        }
-
-        Survey savedSurvey = surveyRepository.save(survey);
-        return mapToSurveyDetailResponse(savedSurvey);
-    }
-
-    @Transactional
-    public SurveyDetailResponse updateSurvey(Long id, SurveyRequest request, Long managerId) {
-        log.info("Updating survey: {}", id);
-
-        Survey survey = surveyRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Survey not found with id: " + id));
-
-        survey.setTitle(request.getTitle());
-        survey.setDescription(request.getDescription());
-        survey.setStartDate(request.getStartDate());
-        survey.setEndDate(request.getEndDate());
-        survey.setAcademicYear(request.getAcademicYear());
-        survey.setSemester(request.getSemester());
-        survey.setTargetResponses(request.getTargetResponses());
-        survey.setUpdatedBy(managerId);
-
-        if (request.getStatus() != null) {
-            survey.setStatus(request.getStatus());
-        }
-
-        Survey savedSurvey = surveyRepository.save(survey);
-        return mapToSurveyDetailResponse(savedSurvey);
-    }
-
-    @Transactional
-    public SurveyDetailResponse updateSurveyStatus(Long id, SurveyStatus status, Long managerId) {
-        log.info("Updating survey status: {} to {}", id, status);
-
-        Survey survey = surveyRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Survey not found with id: " + id));
-
-        survey.setStatus(status);
-        survey.setUpdatedBy(managerId);
-
-        Survey savedSurvey = surveyRepository.save(survey);
-        return mapToSurveyDetailResponse(savedSurvey);
-    }
-
-    public List<SurveySummaryResponse> getAllSurveys() {
-        List<Survey> surveys = surveyRepository.findAll();
-        return surveys.stream()
-                .map(this::mapToSurveySummaryResponse)
-                .collect(Collectors.toList());
-    }
-
-    public List<SurveyDetailResponse> getActiveSurveys() {
-        List<Survey> surveys = surveyRepository.findByIsActiveTrue();
-        return surveys.stream()
-                .map(this::mapToSurveyDetailResponse)
-                .collect(Collectors.toList());
-    }
-
-    public List<SurveySummaryResponse> getCurrentSurveys() {
-        LocalDate today = LocalDate.now();
-        List<Survey> surveys = surveyRepository.findByStartDateLessThanEqualAndEndDateGreaterThanEqual(today, today);
-        return surveys.stream()
-                .map(this::mapToSurveySummaryResponse)
-                .collect(Collectors.toList());
-    }
-
-    public SurveyDetailResponse getSurveyById(Long id) {
-        Survey survey = surveyRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Survey not found with id: " + id));
-        return mapToSurveyDetailResponse(survey);
-    }
-
-    @Transactional
-    public void deleteSurvey(Long id) {
-        log.info("Deleting survey: {}", id);
-        Survey survey = surveyRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Survey not found with id: " + id));
-        survey.setActive(false);
-        surveyRepository.save(survey);
-    }
-
-    // ─────────────────────────────────────────────────
     // SURVEY CREATION WITH DEFAULTS
     // ─────────────────────────────────────────────────
 
@@ -210,6 +54,7 @@ public class SurveyService {
     public SurveyDetailResponse createSurveyWithDefaults(SurveyWithDefaultsRequest request, Long userId) {
         log.info("Creating survey with transport defaults: {}", request.getTitle());
 
+        // Create base survey
         Survey survey = Survey.builder()
                 .title(request.getTitle())
                 .description(request.getDescription())
@@ -225,19 +70,30 @@ public class SurveyService {
                 .updatedBy(userId)
                 .build();
 
+        // Add default transport questions
         List<SurveyQuestion> questions = new ArrayList<>();
         
+        // Route question (default)
         questions.add(createDefaultQuestion(survey, "Select your preferred route", 
                 QuestionType.SINGLE_CHOICE, "route", 1, true));
+        
+        // Slot question (default)
         questions.add(createDefaultQuestion(survey, "Select your preferred time slot", 
                 QuestionType.SINGLE_CHOICE, "slot", 2, true));
+        
+        // Day question (default)
         questions.add(createDefaultQuestion(survey, "Select your travel days", 
                 QuestionType.MULTIPLE_CHOICE, "day", 3, true));
+        
+        // Boarding point question (default)
         questions.add(createDefaultQuestion(survey, "Select your boarding point", 
                 QuestionType.SINGLE_CHOICE, "boardingPoint", 4, true));
+        
+        // Drop point question (default)
         questions.add(createDefaultQuestion(survey, "Select your drop point", 
                 QuestionType.SINGLE_CHOICE, "dropPoint", 5, true));
 
+        // Add custom questions if any
         if (request.getCustomQuestions() != null) {
             int order = 6;
             for (SurveyQuestionRequest q : request.getCustomQuestions()) {
@@ -255,6 +111,7 @@ public class SurveyService {
         
         survey.setQuestions(questions);
 
+        // Add available routes, slots, and days
         if (request.getTransportDefaults() != null) {
             SurveyTransportDefaults defaults = request.getTransportDefaults();
             
@@ -268,6 +125,7 @@ public class SurveyService {
                 survey.setAvailableSlots(slots);
             }
             
+            // Store transport configuration in metadata
             Map<String, Object> metadata = new HashMap<>();
             metadata.put("availableDays", defaults.getAvailableDays());
             metadata.put("busCapacityLimit", defaults.getBusCapacityLimit());
@@ -290,136 +148,12 @@ public class SurveyService {
                 .isActive(true)
                 .build();
         
+        // Add metadata for special handling
         Map<String, Object> metadata = new HashMap<>();
         metadata.put("category", category);
         question.setMetadata(metadata);
         
         return question;
-    }
-
-    // ─────────────────────────────────────────────────
-    // SURVEY RESPONSE OPERATIONS
-    // ─────────────────────────────────────────────────
-
-    @Transactional
-    public SurveySubmissionResponse submitResponse(Long surveyId, SurveySubmissionRequest request) {
-        log.info("Submitting response for survey: {} from student: {}", surveyId, request.getStudentId());
-
-        Survey survey = surveyRepository.findById(surveyId)
-                .orElseThrow(() -> new ResourceNotFoundException("Survey not found with id: " + surveyId));
-
-        // Check if student already responded
-        if (responseRepository.existsBySurveyIdAndStudentId(surveyId, request.getStudentId())) {
-            throw new IllegalStateException("Student has already submitted a response for this survey");
-        }
-
-        // Build response data JSON
-        Map<String, Object> responseData = new HashMap<>();
-        if (request.getResponseData() != null) {
-            try {
-                Map<String, Object> additionalData = objectMapper.readValue(request.getResponseData(), new TypeReference<Map<String, Object>>() {});
-                responseData.putAll(additionalData);
-            } catch (JsonProcessingException e) {
-                log.error("Failed to parse response data", e);
-            }
-        }
-
-        SurveyResponse response = SurveyResponse.builder()
-                .survey(survey)
-                .studentId(request.getStudentId())
-                .studentName(request.getStudentName())
-                .studentEmail(request.getStudentEmail())
-                .studentPhone(request.getStudentPhone())
-                .studentDepartment(request.getStudentDepartment())
-                .studentSemester(request.getStudentSemester())
-                .boardingPoint(request.getBoardingPoint())
-                .dropPoint(request.getDropPoint())
-                .pickupTime(request.getPickupTime())
-                .additionalNotes(request.getAdditionalNotes())
-                .responseData(toResponseDataJson(responseData))
-                .status(ResponseStatus.PENDING)
-                .submittedAt(LocalDateTime.now())
-                .build();
-
-        // Set relations if provided
-        if (request.getSelectedRouteId() != null) {
-            Route route = routeRepository.findById(request.getSelectedRouteId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Route not found"));
-            response.setSelectedRoute(route);
-        }
-
-        if (request.getSelectedSlotId() != null) {
-            BusSlot slot = busSlotRepository.findById(request.getSelectedSlotId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Slot not found"));
-            response.setSelectedSlot(slot);
-        }
-
-        if (request.getPreferredBusId() != null) {
-            Bus bus = busRepository.findById(request.getPreferredBusId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Bus not found"));
-            response.setPreferredBus(bus);
-        }
-
-        SurveyResponse savedResponse = responseRepository.save(response);
-
-        // Update total responses count
-        survey.setTotalResponses(survey.getTotalResponses() + 1);
-        surveyRepository.save(survey);
-
-        return mapToSubmissionResponse(savedResponse);
-    }
-
-    @Transactional
-    public SurveySubmissionResponse updateResponseStatus(Long responseId, ResponseStatus status, String reason) {
-        log.info("Updating response status: {} to {}", responseId, status);
-
-        SurveyResponse response = responseRepository.findById(responseId)
-                .orElseThrow(() -> new ResourceNotFoundException("Response not found with id: " + responseId));
-
-        response.setStatus(status);
-        
-        if (reason != null && !reason.isEmpty()) {
-            String currentNotes = response.getAdditionalNotes();
-            String newNotes = (currentNotes != null ? currentNotes + "\n" : "") + "Status update: " + status + " - " + reason;
-            response.setAdditionalNotes(newNotes);
-        }
-
-        SurveyResponse savedResponse = responseRepository.save(response);
-        return mapToSubmissionResponse(savedResponse);
-    }
-
-    public List<SurveySubmissionResponse> getResponsesBySurvey(Long surveyId) {
-        List<SurveyResponse> responses = responseRepository.findBySurveyId(surveyId);
-        return responses.stream()
-                .map(this::mapToSubmissionResponse)
-                .collect(Collectors.toList());
-    }
-
-    public SurveySubmissionResponse getStudentResponse(Long surveyId, String studentId) {
-        SurveyResponse response = responseRepository.findBySurveyIdAndStudentId(surveyId, studentId)
-                .orElseThrow(() -> new ResourceNotFoundException("Response not found for student: " + studentId));
-        return mapToSubmissionResponse(response);
-    }
-
-    public List<SurveySubmissionResponse> getResponsesByStudent(String studentId) {
-        List<SurveyResponse> responses = responseRepository.findByStudentId(studentId);
-        return responses.stream()
-                .map(this::mapToSubmissionResponse)
-                .collect(Collectors.toList());
-    }
-
-    public List<SurveySubmissionResponse> getResponsesByRoute(Long surveyId, Long routeId) {
-        List<SurveyResponse> responses = responseRepository.findBySurveyAndRoute(surveyId, routeId);
-        return responses.stream()
-                .map(this::mapToSubmissionResponse)
-                .collect(Collectors.toList());
-    }
-
-    public List<SurveySubmissionResponse> getResponsesBySlot(Long surveyId, Long slotId) {
-        List<SurveyResponse> responses = responseRepository.findBySurveyAndSlot(surveyId, slotId);
-        return responses.stream()
-                .map(this::mapToSubmissionResponse)
-                .collect(Collectors.toList());
     }
 
     // ─────────────────────────────────────────────────
@@ -444,22 +178,27 @@ public class SurveyService {
         BusSlot requestedSlot = busSlotRepository.findById(preference.getSlotId())
                 .orElseThrow(() -> new ResourceNotFoundException("Slot not found"));
         
+        // Get capacity limit from survey metadata
         Integer capacityLimit = getCapacityLimit(survey);
         
+        // Check existing assignments for this slot
         long currentSlotAssignments = assignmentRepository.countByAssignedSlotAndStatus(
                 requestedSlot, AssignmentStatus.APPROVED);
         
+        // Check if we need a new bus
         List<Bus> availableBuses = getAvailableBusesForRoute(requestedRoute);
         Bus assignedBus = null;
         AssignmentStatus status;
         String message;
         
         if (currentSlotAssignments >= capacityLimit) {
+            // Slot is full, try to add a new bus
             if (!availableBuses.isEmpty()) {
                 assignedBus = availableBuses.get(0);
                 status = AssignmentStatus.ASSIGNED;
                 message = "Assigned to existing bus due to capacity";
                 
+                // Update slot to reflect new bus
                 requestedSlot.setBus(assignedBus);
                 busSlotRepository.save(requestedSlot);
             } else {
@@ -467,6 +206,7 @@ public class SurveyService {
                 message = "No available buses, added to waitlist";
             }
         } else {
+            // Try to assign to existing bus for this slot
             assignedBus = requestedSlot.getBus();
             if (assignedBus == null && !availableBuses.isEmpty()) {
                 assignedBus = availableBuses.get(0);
@@ -477,6 +217,7 @@ public class SurveyService {
             message = "Successfully assigned";
         }
         
+        // Create assignment
         BusAssignment.BusAssignmentBuilder assignmentBuilder = BusAssignment.builder()
                 .survey(survey)
                 .studentIdentifier(studentId)
@@ -505,6 +246,7 @@ public class SurveyService {
         BusAssignment assignment = assignmentBuilder.build();
         assignmentRepository.save(assignment);
         
+        // Update survey response if exists
         updateSurveyResponseWithAssignment(surveyId, studentId, assignment);
         
         return AssignmentResult.builder()
@@ -540,11 +282,27 @@ public class SurveyService {
         Optional<SurveyResponse> responseOpt = responseRepository.findBySurveyIdAndStudentId(surveyId, studentId);
         if (responseOpt.isPresent()) {
             SurveyResponse response = responseOpt.get();
-            Map<String, Object> responseData = parseResponseData(response.getResponseData());
-            responseData.put("assignmentId", assignment.getId());
-            responseData.put("assignmentStatus", assignment.getStatus().toString());
-            response.setResponseData(toResponseDataJson(responseData));
-            responseRepository.save(response);
+            try {
+                Map<String, Object> responseData = parseResponseData(response.getResponseData());
+                responseData.put("assignmentId", assignment.getId());
+                responseData.put("assignmentStatus", assignment.getStatus().toString());
+                response.setResponseData(objectMapper.writeValueAsString(responseData));
+                responseRepository.save(response);
+            } catch (JsonProcessingException e) {
+                log.error("Failed to update response data", e);
+            }
+        }
+    }
+    
+    private Map<String, Object> parseResponseData(String responseDataJson) {
+        if (responseDataJson == null || responseDataJson.isEmpty()) {
+            return new HashMap<>();
+        }
+        try {
+            return objectMapper.readValue(responseDataJson, new TypeReference<Map<String, Object>>() {});
+        } catch (JsonProcessingException e) {
+            log.error("Failed to parse response data", e);
+            return new HashMap<>();
         }
     }
 
@@ -562,6 +320,7 @@ public class SurveyService {
         long approvedAssignments = assignments.stream().filter(a -> a.getStatus() == AssignmentStatus.APPROVED).count();
         long totalResponses = responses.size();
         
+        // Calculate stats
         DashboardStats stats = DashboardStats.builder()
                 .totalResponses(totalResponses)
                 .approvedAssignments(approvedAssignments)
@@ -571,8 +330,13 @@ public class SurveyService {
                 .overallCapacityUtilization(totalResponses > 0 ? (double) approvedAssignments / totalResponses * 100 : 0)
                 .build();
         
+        // Slot assignments view
         List<SlotAssignmentView> slotAssignments = getSlotAssignmentsView(survey, assignments);
+        
+        // Bus utilization view
         List<BusUtilizationView> busUtilizations = getBusUtilizationsView(survey, assignments);
+        
+        // Pending assignments
         List<PendingAssignmentView> pendingAssignments = getPendingAssignmentsView(responses, assignments);
         
         return ManagerDashboardDTO.builder()
@@ -603,6 +367,7 @@ public class SurveyService {
                     long totalAssigned = slotAssignments.size();
                     long availableSeats = Math.max(0, capacityLimit - totalAssigned);
                     
+                    // Group by bus for this slot
                     Map<Bus, List<BusAssignment>> busGroups = slotAssignments.stream()
                             .filter(a -> a.getAssignedBus() != null)
                             .collect(Collectors.groupingBy(BusAssignment::getAssignedBus));
@@ -821,6 +586,7 @@ public class SurveyService {
     private TransportPreference extractPreferenceFromResponse(SurveyResponse response) {
         Map<String, Object> data = parseResponseData(response.getResponseData());
         
+        // Try to get from responseData first
         Long routeId = null;
         if (data.containsKey("selectedRouteId")) {
             Object routeIdObj = data.get("selectedRouteId");
@@ -873,204 +639,22 @@ public class SurveyService {
     }
 
     // ─────────────────────────────────────────────────
-    // STATISTICS ENDPOINTS
-    // ─────────────────────────────────────────────────
-
-    public SurveyStatistics getSurveyStatistics(Long surveyId) {
-        Survey survey = surveyRepository.findById(surveyId)
-                .orElseThrow(() -> new ResourceNotFoundException("Survey not found"));
-        
-        List<SurveyResponse> responses = responseRepository.findBySurveyId(surveyId);
-        
-        Map<String, Long> responsesByStatus = responses.stream()
-                .collect(Collectors.groupingBy(r -> r.getStatus().toString(), Collectors.counting()));
-        
-        Map<String, Long> responsesByRoute = responses.stream()
-                .filter(r -> r.getSelectedRoute() != null)
-                .collect(Collectors.groupingBy(r -> r.getSelectedRoute().getRouteName(), Collectors.counting()));
-        
-        Map<String, Long> responsesBySlot = responses.stream()
-                .filter(r -> r.getSelectedSlot() != null)
-                .collect(Collectors.groupingBy(r -> r.getSelectedSlot().getSlotName(), Collectors.counting()));
-        
-        Map<String, Long> responsesByDepartment = responses.stream()
-                .filter(r -> r.getStudentDepartment() != null)
-                .collect(Collectors.groupingBy(SurveyResponse::getStudentDepartment, Collectors.counting()));
-        
-        Map<String, Long> responsesBySemester = responses.stream()
-                .filter(r -> r.getStudentSemester() != null)
-                .collect(Collectors.groupingBy(SurveyResponse::getStudentSemester, Collectors.counting()));
-        
-        List<Object[]> dropPointResults = responseRepository.countByDropPoint(surveyId);
-        List<SurveyStatistics.DropPointStat> topDropPoints = dropPointResults.stream()
-                .map(result -> SurveyStatistics.DropPointStat.builder()
-                        .dropPoint((String) result[0])
-                        .count((Long) result[1])
-                        .build())
-                .collect(Collectors.toList());
-        
-        List<Object[]> boardingPointResults = responseRepository.countByBoardingPoint(surveyId);
-        List<SurveyStatistics.BoardingPointStat> topBoardingPoints = boardingPointResults.stream()
-                .map(result -> SurveyStatistics.BoardingPointStat.builder()
-                        .boardingPoint((String) result[0])
-                        .count((Long) result[1])
-                        .build())
-                .collect(Collectors.toList());
-        
-        return SurveyStatistics.builder()
-                .surveyId(surveyId)
-                .surveyTitle(survey.getTitle())
-                .totalResponses(responses.size())
-                .targetResponses(survey.getTargetResponses() != null ? survey.getTargetResponses() : 0)
-                .completionRate(survey.getTargetResponses() != null && survey.getTargetResponses() > 0 ? 
-                        (double) responses.size() / survey.getTargetResponses() * 100 : 0)
-                .responsesByStatus(responsesByStatus)
-                .responsesByRoute(responsesByRoute)
-                .responsesBySlot(responsesBySlot)
-                .topDropPoints(topDropPoints)
-                .topBoardingPoints(topBoardingPoints)
-                .responsesByDepartment(responsesByDepartment)
-                .responsesBySemester(responsesBySemester)
-                .build();
-    }
-
-    // ─────────────────────────────────────────────────
-    // EXPORT ENDPOINTS
-    // ─────────────────────────────────────────────────
-
-    public List<Map<String, Object>> exportSurveyResponses(Long surveyId) {
-        List<SurveyResponse> responses = responseRepository.findBySurveyId(surveyId);
-        List<Map<String, Object>> exportData = new ArrayList<>();
-        
-        for (SurveyResponse response : responses) {
-            Map<String, Object> row = new LinkedHashMap<>();
-            row.put("Student ID", response.getStudentId());
-            row.put("Student Name", response.getStudentName());
-            row.put("Student Email", response.getStudentEmail());
-            row.put("Student Phone", response.getStudentPhone());
-            row.put("Department", response.getStudentDepartment());
-            row.put("Semester", response.getStudentSemester());
-            row.put("Selected Route", response.getSelectedRoute() != null ? response.getSelectedRoute().getRouteName() : "");
-            row.put("Selected Slot", response.getSelectedSlot() != null ? response.getSelectedSlot().getSlotName() : "");
-            row.put("Boarding Point", response.getBoardingPoint());
-            row.put("Drop Point", response.getDropPoint());
-            row.put("Pickup Time", response.getPickupTime());
-            row.put("Status", response.getStatus());
-            row.put("Submitted At", response.getSubmittedAt());
-            row.put("Additional Notes", response.getAdditionalNotes());
-            
-            // Add custom response data
-            Map<String, Object> responseData = parseResponseData(response.getResponseData());
-            for (Map.Entry<String, Object> entry : responseData.entrySet()) {
-                if (!entry.getKey().equals("assignmentId") && !entry.getKey().equals("assignmentStatus")) {
-                    row.put(entry.getKey(), entry.getValue());
-                }
-            }
-            
-            exportData.add(row);
-        }
-        
-        return exportData;
-    }
-
-    // ─────────────────────────────────────────────────
-    // MAPPER METHODS
+    // HELPER METHODS
     // ─────────────────────────────────────────────────
 
     private SurveyDetailResponse mapToSurveyDetailResponse(Survey survey) {
-        SurveyDetailResponse.SurveyDetailResponseBuilder builder = SurveyDetailResponse.builder()
+        return SurveyDetailResponse.builder()
                 .id(survey.getId())
                 .title(survey.getTitle())
                 .description(survey.getDescription())
                 .status(survey.getStatus())
                 .startDate(survey.getStartDate())
                 .endDate(survey.getEndDate())
-                .academicYear(survey.getAcademicYear())
-                .semester(survey.getSemester())
                 .totalResponses(survey.getTotalResponses())
-                .targetResponses(survey.getTargetResponses())
-                .isActive(survey.isActive())
-                .createdAt(survey.getCreatedAt())
-                .updatedAt(survey.getUpdatedAt())
-                .createdBy(survey.getCreatedBy())
-                .updatedBy(survey.getUpdatedBy());
-
-        if (survey.getQuestions() != null) {
-            builder.questions(survey.getQuestions().stream()
-                    .map(this::mapToQuestionResponse)
-                    .collect(Collectors.toList()));
-        }
-
-        if (survey.getAvailableRoutes() != null) {
-            builder.availableRoutes(survey.getAvailableRoutes().stream()
-                    .map(this::mapToRouteBasicResponse)
-                    .collect(Collectors.toList()));
-        }
-
-        if (survey.getAvailableSlots() != null) {
-            builder.availableSlots(survey.getAvailableSlots().stream()
-                    .map(this::mapToSlotResponse)
-                    .collect(Collectors.toList()));
-        }
-
-        return builder.build();
-    }
-
-    private SurveySummaryResponse mapToSurveySummaryResponse(Survey survey) {
-        long totalResponses = survey.getTotalResponses() != null ? survey.getTotalResponses() : 0;
-        int targetResponses = survey.getTargetResponses() != null ? survey.getTargetResponses() : 0;
-        double completionRate = targetResponses > 0 ? (double) totalResponses / targetResponses * 100 : 0;
-
-        return SurveySummaryResponse.builder()
-                .id(survey.getId())
-                .title(survey.getTitle())
-                .status(survey.getStatus())
-                .startDate(survey.getStartDate())
-                .endDate(survey.getEndDate())
-                .totalResponses((int) totalResponses)
-                .targetResponses(targetResponses)
-                .completionRate(completionRate)
                 .isActive(survey.isActive())
                 .build();
     }
-
-    private SurveyQuestionResponse mapToQuestionResponse(SurveyQuestion question) {
-        return SurveyQuestionResponse.builder()
-                .id(question.getId())
-                .questionText(question.getQuestionText())
-                .questionType(question.getQuestionType())
-                .options(question.getOptions())
-                .displayOrder(question.getDisplayOrder())
-                .required(question.isRequired())
-                .isActive(question.isActive())
-                .build();
-    }
-
-    private SurveySubmissionResponse mapToSubmissionResponse(SurveyResponse response) {
-        return SurveySubmissionResponse.builder()
-                .id(response.getId())
-                .studentId(response.getStudentId())
-                .studentName(response.getStudentName())
-                .studentEmail(response.getStudentEmail())
-                .studentPhone(response.getStudentPhone())
-                .studentDepartment(response.getStudentDepartment())
-                .studentSemester(response.getStudentSemester())
-                .selectedRoute(response.getSelectedRoute() != null ? 
-                        mapToRouteBasicResponse(response.getSelectedRoute()) : null)
-                .selectedSlot(response.getSelectedSlot() != null ? 
-                        mapToSlotResponse(response.getSelectedSlot()) : null)
-                .preferredBus(response.getPreferredBus() != null ? 
-                        mapToBusBasicResponse(response.getPreferredBus()) : null)
-                .boardingPoint(response.getBoardingPoint())
-                .dropPoint(response.getDropPoint())
-                .pickupTime(response.getPickupTime())
-                .status(response.getStatus())
-                .responseData(response.getResponseData())
-                .submittedAt(response.getSubmittedAt())
-                .additionalNotes(response.getAdditionalNotes())
-                .build();
-    }
-
+    
     private RouteBasicResponse mapToRouteBasicResponse(Route route) {
         if (route == null) return null;
         return RouteBasicResponse.builder()
@@ -1081,7 +665,7 @@ public class SurveyService {
                 .endPoint(route.getEndPoint())
                 .build();
     }
-
+    
     private BusSlotResponse mapToSlotResponse(BusSlot slot) {
         if (slot == null) return null;
         return BusSlotResponse.builder()
@@ -1094,7 +678,7 @@ public class SurveyService {
                 .status(slot.getStatus())
                 .build();
     }
-
+    
     private BusBasicResponse mapToBusBasicResponse(Bus bus) {
         if (bus == null) return null;
         return BusBasicResponse.builder()

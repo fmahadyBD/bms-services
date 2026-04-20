@@ -9,4 +9,6 @@ public class RouteBasicResponse {
     private Long id;
     private String busNo;
     private String routeName;
+    private String startPoint;  // ADD THIS
+    private String endPoint;    // ADD THIS
 }

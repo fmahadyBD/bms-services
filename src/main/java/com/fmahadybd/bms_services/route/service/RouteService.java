@@ -45,13 +45,16 @@ public class RouteService {
         // Validate pickup points order
         validatePickupPointsOrder(req.getPickupPoints());
 
-        // Build route entity
+        // Build route entity with startPoint and endPoint
         Route route = Route.builder()
                 .busNo(req.getBusNo())
                 .routeName(req.getRouteName())
                 .routeLine(req.getRouteLine())
+                .startPoint(req.getStartPoint())
+                .endPoint(req.getEndPoint())
                 .status(ROUTE_STATUS.ACTIVE)
                 .createdBy(userId)
+                .updatedBy(userId)
                 .build();
 
         // Add pickup points
@@ -145,10 +148,12 @@ public class RouteService {
         // Validate pickup points order
         validatePickupPointsOrder(req.getPickupPoints());
 
-        // Update basic fields
+        // Update basic fields including startPoint and endPoint
         route.setBusNo(req.getBusNo());
         route.setRouteName(req.getRouteName());
         route.setRouteLine(req.getRouteLine());
+        route.setStartPoint(req.getStartPoint());
+        route.setEndPoint(req.getEndPoint());
         route.setStatus(req.getStatus());
         route.setUpdatedBy(userId);
 
@@ -188,6 +193,14 @@ public class RouteService {
 
                 case "routeLine":
                     route.setRouteLine((String) value);
+                    break;
+
+                case "startPoint":
+                    route.setStartPoint((String) value);
+                    break;
+
+                case "endPoint":
+                    route.setEndPoint((String) value);
                     break;
 
                 case "status":
@@ -415,7 +428,7 @@ public class RouteService {
     public List<BusResponse> getActiveBusesByRoute(Long routeId) {
         Route route = getRouteOrThrow(routeId);
         return route.getBuses().stream()
-                .filter(bus -> BUS_STATUS.ACTIVE.equals(bus.getStatus())) // ✅ fixed: proper enum comparison
+                .filter(bus -> BUS_STATUS.ACTIVE.equals(bus.getStatus()))
                 .map(this::convertToBusResponse)
                 .collect(Collectors.toList());
     }
@@ -433,7 +446,7 @@ public class RouteService {
         Route route = getRouteOrThrow(routeId);
         return route.getBusSlots().stream()
                 .filter(slot -> slot.getStatus() != null &&
-                        "ACTIVE".equals(slot.getStatus().name())) // ✅ fixed: enum.name() instead of toString()
+                        "ACTIVE".equals(slot.getStatus().name()))
                 .map(this::convertToBusSlotResponse)
                 .collect(Collectors.toList());
     }
@@ -515,6 +528,8 @@ public class RouteService {
                 .busNo(route.getBusNo())
                 .routeName(route.getRouteName())
                 .routeLine(route.getRouteLine())
+                .startPoint(route.getStartPoint())
+                .endPoint(route.getEndPoint())
                 .status(route.getStatus())
                 .pickupPoints(pickupResponses)
                 .operatingDays(dayResponses)
@@ -584,6 +599,8 @@ public class RouteService {
                 .id(route.getId())
                 .busNo(route.getBusNo())
                 .routeName(route.getRouteName())
+                .startPoint(route.getStartPoint())
+                .endPoint(route.getEndPoint())
                 .build();
     }
 

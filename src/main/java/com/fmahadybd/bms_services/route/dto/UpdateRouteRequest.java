@@ -16,7 +16,6 @@ import java.util.List;
 public class UpdateRouteRequest {
 
     @NotBlank(message = "Bus number is required")
-    // @Pattern(regexp = "^BUS-\\d{3}$", message = "Bus No must follow format: BUS-001, BUS-002, etc.")
     private String busNo;
 
     @NotBlank(message = "Route name is required")
@@ -26,6 +25,12 @@ public class UpdateRouteRequest {
     @NotBlank(message = "Route line is required")
     @Size(min = 5, max = 255, message = "Route line must be between 5 and 255 characters")
     private String routeLine;
+
+    @NotBlank(message = "Start point is required")  // ADD THIS
+    private String startPoint;
+
+    @NotBlank(message = "End point is required")    // ADD THIS
+    private String endPoint;
 
     @NotNull(message = "Status is required")
     private ROUTE_STATUS status;

@@ -15,7 +15,7 @@ import java.util.List;
 public class SurveyRequest {
 
     @NotBlank(message = "Title is required")
-    @Size(min = 5, max = 200, message = "Title must be between 5 and 200 characters")
+    @Size(min = 3, max = 200, message = "Title must be between 3 and 200 characters")
     private String title;
 
     @Size(max = 500, message = "Description cannot exceed 500 characters")
@@ -39,4 +39,10 @@ public class SurveyRequest {
     private SurveyStatus status;
 
     private List<SurveyQuestionRequest> questions;
+    
+    // NEW: Available route IDs
+    private List<Long> availableRouteIds;
+    
+    // NEW: Available slot IDs
+    private List<Long> availableSlotIds;
 }

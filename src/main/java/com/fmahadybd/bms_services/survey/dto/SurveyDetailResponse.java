@@ -1,5 +1,7 @@
 package com.fmahadybd.bms_services.survey.dto;
 
+import com.fmahadybd.bms_services.route.dto.RouteBasicResponse;
+import com.fmahadybd.bms_services.slot.dto.BusSlotResponse;
 import com.fmahadybd.bms_services.survey.model.SurveyStatus;
 import lombok.*;
 
@@ -26,6 +28,13 @@ public class SurveyDetailResponse {
     private Integer targetResponses;
     private boolean isActive;
     private List<SurveyQuestionResponse> questions;
+    
+    // NEW: Available routes with details
+    private List<RouteBasicResponse> availableRoutes;
+    
+    // NEW: Available slots with details
+    private List<BusSlotResponse> availableSlots;
+    
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private Long createdBy;

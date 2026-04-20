@@ -1,3 +1,4 @@
+// com/fmahadybd/bms_services/survey/controller/SurveyController.java - Fixed
 package com.fmahadybd.bms_services.survey.controller;
 
 import com.fmahadybd.bms_services.survey.dto.*;
@@ -32,6 +33,14 @@ public class SurveyController {
                 .body(surveyService.createSurvey(request, managerId));
     }
 
+    @PostMapping("/with-defaults")
+    public ResponseEntity<SurveyDetailResponse> createSurveyWithDefaults(
+            @Valid @RequestBody SurveyWithDefaultsRequest request) {
+        Long managerId = 1L; // This should come from security context
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(surveyService.createSurveyWithDefaults(request, managerId));
+    }
+
     @PutMapping("/{id}")
     public ResponseEntity<SurveyDetailResponse> updateSurvey(
             @PathVariable Long id,
@@ -54,7 +63,7 @@ public class SurveyController {
     }
 
     @GetMapping("/active")
-    public ResponseEntity<List<SurveySummaryResponse>> getActiveSurveys() {
+    public ResponseEntity<List<SurveyDetailResponse>> getActiveSurveys() {
         return ResponseEntity.ok(surveyService.getActiveSurveys());
     }
 
@@ -125,6 +134,51 @@ public class SurveyController {
             @PathVariable Long surveyId,
             @PathVariable Long slotId) {
         return ResponseEntity.ok(surveyService.getResponsesBySlot(surveyId, slotId));
+    }
+
+    // ─────────────────────────────────────────────────
+    // ASSIGNMENT ENDPOINTS
+    // ─────────────────────────────────────────────────
+
+    @PostMapping("/{surveyId}/assign/{studentId}")
+    public ResponseEntity<AssignmentResult> assignStudentToTransport(
+            @PathVariable Long surveyId,
+            @PathVariable String studentId,
+            @RequestBody TransportPreference preference) {
+        Long managerId = 1L;
+        return ResponseEntity.ok(surveyService.assignStudentToTransport(surveyId, studentId, preference, managerId));
+    }
+
+    @PostMapping("/{surveyId}/batch-assign")
+    public ResponseEntity<BatchAssignmentResult> batchAssignStudents(@PathVariable Long surveyId) {
+        Long managerId = 1L;
+        return ResponseEntity.ok(surveyService.batchAssignStudents(surveyId, managerId));
+    }
+
+    // ─────────────────────────────────────────────────
+    // MANAGER DASHBOARD ENDPOINTS
+    // ─────────────────────────────────────────────────
+
+    @GetMapping("/{surveyId}/dashboard")
+    public ResponseEntity<ManagerDashboardDTO> getManagerDashboard(@PathVariable Long surveyId) {
+        return ResponseEntity.ok(surveyService.getManagerDashboard(surveyId));
+    }
+
+    // ─────────────────────────────────────────────────
+    // STUDENT TRANSPORT ENDPOINTS
+    // ─────────────────────────────────────────────────
+
+    @GetMapping("/transport/student/{studentId}")
+    public ResponseEntity<List<StudentTransportDetailsDTO>> getAllStudentTransports(
+            @PathVariable String studentId) {
+        return ResponseEntity.ok(surveyService.getAllStudentTransports(studentId));
+    }
+
+    @GetMapping("/{surveyId}/transport/student/{studentId}")
+    public ResponseEntity<StudentTransportDetailsDTO> getStudentTransportDetails(
+            @PathVariable Long surveyId,
+            @PathVariable String studentId) {
+        return ResponseEntity.ok(surveyService.getStudentTransportDetails(studentId, surveyId));
     }
 
     // ─────────────────────────────────────────────────

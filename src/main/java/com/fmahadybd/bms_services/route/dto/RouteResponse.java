@@ -1,3 +1,4 @@
+// RouteResponse.java
 package com.fmahadybd.bms_services.route.dto;
 
 import com.fmahadybd.bms_services.bus.dto.BusResponse;
@@ -19,6 +20,8 @@ public class RouteResponse {
     private String busNo;
     private String routeName;
     private String routeLine;
+    private String startPoint;  // ADD THIS
+    private String endPoint;    // ADD THIS
     private ROUTE_STATUS status;
     private List<PickupPointResponse> pickupPoints;
     private List<DAY> operatingDays;

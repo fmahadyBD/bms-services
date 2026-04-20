@@ -12,11 +12,12 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @Entity
 @Table(name = "surveys", indexes = {
-    @Index(name = "idx_survey_status", columnList = "status"),
-    @Index(name = "idx_survey_date_range", columnList = "start_date,end_date")
+        @Index(name = "idx_survey_status", columnList = "status"),
+        @Index(name = "idx_survey_date_range", columnList = "start_date,end_date")
 })
 @Getter
 @Setter
@@ -46,10 +47,10 @@ public class Survey {
     private LocalDate endDate;
 
     @Column(name = "academic_year")
-    private String academicYear; // e.g., "2024-2025"
+    private String academicYear;
 
     @Column(name = "semester")
-    private String semester; // e.g., "Spring", "Fall", "Summer"
+    private String semester;
 
     @Column(name = "total_responses")
     private Integer totalResponses;
@@ -66,6 +67,16 @@ public class Survey {
     @OneToMany(mappedBy = "survey", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<SurveyResponse> responses = new ArrayList<>();
 
+    // NEW: Available routes for this survey
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(name = "survey_routes", joinColumns = @JoinColumn(name = "survey_id"), inverseJoinColumns = @JoinColumn(name = "route_id"))
+    private List<Route> availableRoutes = new ArrayList<>();
+
+    // NEW: Available time slots for this survey
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(name = "survey_slots", joinColumns = @JoinColumn(name = "survey_id"), inverseJoinColumns = @JoinColumn(name = "slot_id"))
+    private List<BusSlot> availableSlots = new ArrayList<>();
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -79,4 +90,8 @@ public class Survey {
 
     @Column(name = "updated_by")
     private Long updatedBy;
+
+    // Add to Survey.java entity
+    @Column(columnDefinition = "json")
+    private Map<String, Object> metadata;
 }

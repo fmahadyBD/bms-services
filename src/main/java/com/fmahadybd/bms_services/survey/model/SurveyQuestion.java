@@ -1,5 +1,7 @@
 package com.fmahadybd.bms_services.survey.model;
 
+import java.util.Map;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
@@ -38,4 +40,8 @@ public class SurveyQuestion {
 
     @Column(name = "is_active")
     private boolean isActive;
+
+    // Add to SurveyQuestion.java entity
+    @Column(columnDefinition = "json")
+    private Map<String, Object> metadata;
 }

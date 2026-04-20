@@ -37,6 +37,13 @@ public class Route {
     @Column(nullable = false, length = 255)
     private String routeLine;
 
+    // ADD THESE TWO FIELDS
+    @Column(name = "start_point", length = 100)
+    private String startPoint;
+
+    @Column(name = "end_point", length = 100)
+    private String endPoint;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private ROUTE_STATUS status = ROUTE_STATUS.ACTIVE;
