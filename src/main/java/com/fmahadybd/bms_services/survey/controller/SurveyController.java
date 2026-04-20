@@ -1,18 +1,18 @@
-// com/fmahadybd/bms_services/survey/controller/SurveyController.java - Fixed
+// com/fmahadybd/bms_services/survey/controller/SurveyController.java
 package com.fmahadybd.bms_services.survey.controller;
 
-import com.fmahadybd.bms_services.survey.dto.*;
-import com.fmahadybd.bms_services.survey.model.ResponseStatus;
-import com.fmahadybd.bms_services.survey.model.SurveyStatus;
+import com.fmahadybd.bms_services.survey.dto.SurveyRequest;
+import com.fmahadybd.bms_services.survey.dto.SurveyResponseDTO;
+import com.fmahadybd.bms_services.survey.dto.SubmissionRequest;
+import com.fmahadybd.bms_services.survey.model.SurveyResponse;
+import com.fmahadybd.bms_services.survey.repository.SurveyResponseRepository;
 import com.fmahadybd.bms_services.survey.service.SurveyService;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/surveys")
@@ -20,61 +20,22 @@ import java.util.Map;
 public class SurveyController {
 
     private final SurveyService surveyService;
+    private final SurveyResponseRepository surveyResponseRepository;
 
-    // ─────────────────────────────────────────────────
-    // SURVEY MANAGEMENT ENDPOINTS
-    // ─────────────────────────────────────────────────
-
-    @PostMapping
-    public ResponseEntity<SurveyDetailResponse> createSurvey(
-            @Valid @RequestBody SurveyRequest request) {
-        Long managerId = 1L; // This should come from security context
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(surveyService.createSurvey(request, managerId));
+    @GetMapping("/all-responses")
+    public ResponseEntity<List<SurveyResponse>> getAllResponses() {
+        return ResponseEntity.ok(surveyResponseRepository.findAll());
     }
 
-    @PostMapping("/with-defaults")
-    public ResponseEntity<SurveyDetailResponse> createSurveyWithDefaults(
-            @Valid @RequestBody SurveyWithDefaultsRequest request) {
-        Long managerId = 1L; // This should come from security context
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(surveyService.createSurveyWithDefaults(request, managerId));
+    // Manager endpoints
+    @PostMapping
+    public ResponseEntity<SurveyResponseDTO> createSurvey(@RequestBody SurveyRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(surveyService.createSurvey(request));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<SurveyDetailResponse> updateSurvey(
-            @PathVariable Long id,
-            @Valid @RequestBody SurveyRequest request) {
-        Long managerId = 1L; // This should come from security context
-        return ResponseEntity.ok(surveyService.updateSurvey(id, request, managerId));
-    }
-
-    @PatchMapping("/{id}/status")
-    public ResponseEntity<SurveyDetailResponse> updateSurveyStatus(
-            @PathVariable Long id,
-            @RequestParam SurveyStatus status) {
-        Long managerId = 1L; // This should come from security context
-        return ResponseEntity.ok(surveyService.updateSurveyStatus(id, status, managerId));
-    }
-
-    @GetMapping
-    public ResponseEntity<List<SurveySummaryResponse>> getAllSurveys() {
-        return ResponseEntity.ok(surveyService.getAllSurveys());
-    }
-
-    @GetMapping("/active")
-    public ResponseEntity<List<SurveyDetailResponse>> getActiveSurveys() {
-        return ResponseEntity.ok(surveyService.getActiveSurveys());
-    }
-
-    @GetMapping("/current")
-    public ResponseEntity<List<SurveySummaryResponse>> getCurrentSurveys() {
-        return ResponseEntity.ok(surveyService.getCurrentSurveys());
-    }
-
-    @GetMapping("/{id}")
-    public ResponseEntity<SurveyDetailResponse> getSurveyById(@PathVariable Long id) {
-        return ResponseEntity.ok(surveyService.getSurveyById(id));
+    public ResponseEntity<SurveyResponseDTO> updateSurvey(@PathVariable Long id, @RequestBody SurveyRequest request) {
+        return ResponseEntity.ok(surveyService.updateSurvey(id, request));
     }
 
     @DeleteMapping("/{id}")
@@ -83,120 +44,30 @@ public class SurveyController {
         return ResponseEntity.noContent().build();
     }
 
-    // ─────────────────────────────────────────────────
-    // SURVEY RESPONSE ENDPOINTS
-    // ─────────────────────────────────────────────────
-
-    @PostMapping("/{surveyId}/responses")
-    public ResponseEntity<SurveySubmissionResponse> submitResponse(
-            @PathVariable Long surveyId,
-            @Valid @RequestBody SurveySubmissionRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(surveyService.submitResponse(surveyId, request));
+    @GetMapping
+    public ResponseEntity<List<SurveyResponseDTO>> getAllSurveys() {
+        return ResponseEntity.ok(surveyService.getAllSurveys());
     }
 
-    @PatchMapping("/responses/{responseId}/status")
-    public ResponseEntity<SurveySubmissionResponse> updateResponseStatus(
-            @PathVariable Long responseId,
-            @RequestParam ResponseStatus status,
-            @RequestParam(required = false) String reason) {
-        return ResponseEntity.ok(surveyService.updateResponseStatus(responseId, status, reason));
+    @GetMapping("/{id}")
+    public ResponseEntity<SurveyResponseDTO> getSurveyById(@PathVariable Long id) {
+        return ResponseEntity.ok(surveyService.getSurveyById(id));
+    }
+
+    // Student endpoints
+    @GetMapping("/active")
+    public ResponseEntity<List<SurveyResponseDTO>> getActiveSurveys() {
+        return ResponseEntity.ok(surveyService.getActiveSurveys());
+    }
+
+    @PostMapping("/{surveyId}/submit")
+    public ResponseEntity<Void> submitResponse(@PathVariable Long surveyId, @RequestBody SubmissionRequest request) {
+        surveyService.submitResponse(surveyId, request);
+        return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
     @GetMapping("/{surveyId}/responses")
-    public ResponseEntity<List<SurveySubmissionResponse>> getResponsesBySurvey(
-            @PathVariable Long surveyId) {
-        return ResponseEntity.ok(surveyService.getResponsesBySurvey(surveyId));
-    }
-
-    @GetMapping("/{surveyId}/responses/student/{studentId}")
-    public ResponseEntity<SurveySubmissionResponse> getStudentResponse(
-            @PathVariable Long surveyId,
-            @PathVariable String studentId) {
-        return ResponseEntity.ok(surveyService.getStudentResponse(surveyId, studentId));
-    }
-
-    @GetMapping("/responses/student/{studentId}")
-    public ResponseEntity<List<SurveySubmissionResponse>> getResponsesByStudent(
-            @PathVariable String studentId) {
-        return ResponseEntity.ok(surveyService.getResponsesByStudent(studentId));
-    }
-
-    @GetMapping("/{surveyId}/responses/route/{routeId}")
-    public ResponseEntity<List<SurveySubmissionResponse>> getResponsesByRoute(
-            @PathVariable Long surveyId,
-            @PathVariable Long routeId) {
-        return ResponseEntity.ok(surveyService.getResponsesByRoute(surveyId, routeId));
-    }
-
-    @GetMapping("/{surveyId}/responses/slot/{slotId}")
-    public ResponseEntity<List<SurveySubmissionResponse>> getResponsesBySlot(
-            @PathVariable Long surveyId,
-            @PathVariable Long slotId) {
-        return ResponseEntity.ok(surveyService.getResponsesBySlot(surveyId, slotId));
-    }
-
-    // ─────────────────────────────────────────────────
-    // ASSIGNMENT ENDPOINTS
-    // ─────────────────────────────────────────────────
-
-    @PostMapping("/{surveyId}/assign/{studentId}")
-    public ResponseEntity<AssignmentResult> assignStudentToTransport(
-            @PathVariable Long surveyId,
-            @PathVariable String studentId,
-            @RequestBody TransportPreference preference) {
-        Long managerId = 1L;
-        return ResponseEntity.ok(surveyService.assignStudentToTransport(surveyId, studentId, preference, managerId));
-    }
-
-    @PostMapping("/{surveyId}/batch-assign")
-    public ResponseEntity<BatchAssignmentResult> batchAssignStudents(@PathVariable Long surveyId) {
-        Long managerId = 1L;
-        return ResponseEntity.ok(surveyService.batchAssignStudents(surveyId, managerId));
-    }
-
-    // ─────────────────────────────────────────────────
-    // MANAGER DASHBOARD ENDPOINTS
-    // ─────────────────────────────────────────────────
-
-    @GetMapping("/{surveyId}/dashboard")
-    public ResponseEntity<ManagerDashboardDTO> getManagerDashboard(@PathVariable Long surveyId) {
-        return ResponseEntity.ok(surveyService.getManagerDashboard(surveyId));
-    }
-
-    // ─────────────────────────────────────────────────
-    // STUDENT TRANSPORT ENDPOINTS
-    // ─────────────────────────────────────────────────
-
-    @GetMapping("/transport/student/{studentId}")
-    public ResponseEntity<List<StudentTransportDetailsDTO>> getAllStudentTransports(
-            @PathVariable String studentId) {
-        return ResponseEntity.ok(surveyService.getAllStudentTransports(studentId));
-    }
-
-    @GetMapping("/{surveyId}/transport/student/{studentId}")
-    public ResponseEntity<StudentTransportDetailsDTO> getStudentTransportDetails(
-            @PathVariable Long surveyId,
-            @PathVariable String studentId) {
-        return ResponseEntity.ok(surveyService.getStudentTransportDetails(studentId, surveyId));
-    }
-
-    // ─────────────────────────────────────────────────
-    // STATISTICS ENDPOINTS
-    // ─────────────────────────────────────────────────
-
-    @GetMapping("/{id}/statistics")
-    public ResponseEntity<SurveyStatistics> getSurveyStatistics(@PathVariable Long id) {
-        return ResponseEntity.ok(surveyService.getSurveyStatistics(id));
-    }
-
-    // ─────────────────────────────────────────────────
-    // EXPORT ENDPOINTS
-    // ─────────────────────────────────────────────────
-
-    @GetMapping("/{surveyId}/export")
-    public ResponseEntity<List<Map<String, Object>>> exportSurveyResponses(
-            @PathVariable Long surveyId) {
-        return ResponseEntity.ok(surveyService.exportSurveyResponses(surveyId));
+    public ResponseEntity<List<SurveyResponse>> getResponses(@PathVariable Long surveyId) {
+        return ResponseEntity.ok(surveyService.getSurveyResponses(surveyId));
     }
 }

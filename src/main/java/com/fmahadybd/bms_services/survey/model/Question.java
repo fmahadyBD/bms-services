@@ -1,6 +1,5 @@
+// com/fmahadybd/bms_services/survey/model/Question.java
 package com.fmahadybd.bms_services.survey.model;
-
-import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
@@ -13,7 +12,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class SurveyQuestion {
+public class Question {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -27,21 +26,13 @@ public class SurveyQuestion {
     @Column(nullable = false)
     private String questionText;
 
-    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private QuestionType questionType;
+    private String questionType; // TEXT, SINGLE_CHOICE, MULTIPLE_CHOICE
 
     @Column(length = 1000)
-    private String options; // JSON string for multiple choice options
+    private String options; // JSON array for multiple choice options
 
     private Integer displayOrder;
 
     private boolean required;
-
-    @Column(name = "is_active")
-    private boolean isActive;
-
-    // Add to SurveyQuestion.java entity
-    @Column(columnDefinition = "json")
-    private Map<String, Object> metadata;
 }

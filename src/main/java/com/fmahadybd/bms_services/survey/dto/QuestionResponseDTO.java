@@ -9,10 +9,11 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class DailySchedule {
-    private String day;
-    private String pickupTime;
-    private String dropTime;
-    private String busNumber;
-    private String driverContact;
+public class QuestionResponseDTO {
+    private Long id;
+    private String questionText;
+    private String questionType;
+    private String options;
+    private Integer displayOrder;
+    private boolean required;
 }

@@ -1,23 +1,23 @@
+// com/fmahadybd/bms_services/survey/dto/SubmissionRequest.java
 package com.fmahadybd.bms_services.survey.dto;
-
-import java.time.LocalDateTime;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.Map;
+
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class PendingAssignmentView {
-    private Long assignmentId;
+public class SubmissionRequest {
     private String studentId;
     private String studentName;
     private String studentEmail;
-    private String requestedRoute;
-    private String requestedSlot;
-    private String requestedDay;
-    private LocalDateTime submittedAt;
+    private String studentPhone;
+    private Long selectedRouteId;
+    private Long selectedSlotId;
+    private Map<String, Object> answers; // questionId -> answer
 }

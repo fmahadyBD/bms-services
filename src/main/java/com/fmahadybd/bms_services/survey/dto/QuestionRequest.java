@@ -9,9 +9,10 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class BusAssignmentSummary {
-    private Long busId;
-    private String busNumber;
-    private long assignedCount;
-    private long capacity;
+public class QuestionRequest {
+    private String questionText;
+    private String questionType;
+    private String options;
+    private Integer displayOrder;
+    private boolean required;
 }
