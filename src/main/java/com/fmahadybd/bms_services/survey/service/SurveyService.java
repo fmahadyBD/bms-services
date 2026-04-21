@@ -2,6 +2,10 @@
 package com.fmahadybd.bms_services.survey.service;
 
 import com.fmahadybd.bms_services.exception.ResourceNotFoundException;
+import com.fmahadybd.bms_services.route.model.Route;
+import com.fmahadybd.bms_services.route.repository.RouteRepository;
+import com.fmahadybd.bms_services.student.model.Student;
+import com.fmahadybd.bms_services.student.repository.StudentRepository;
 import com.fmahadybd.bms_services.survey.dto.*;
 import com.fmahadybd.bms_services.survey.model.Question;
 import com.fmahadybd.bms_services.survey.model.Survey;
@@ -27,6 +31,9 @@ public class SurveyService {
     private final SurveyRepository surveyRepository;
     private final SurveyResponseRepository responseRepository;
     private final ObjectMapper objectMapper;
+    // Add to SurveyService dependencies
+    private final StudentRepository studentRepository;
+    private final RouteRepository routeRepository;
 
     // ==================== SURVEY CRUD ====================
 
@@ -76,7 +83,7 @@ public class SurveyService {
 
         // Remove old questions
         survey.getQuestions().clear();
-        
+
         // Add new questions
         if (request.getQuestions() != null) {
             for (QuestionRequest q : request.getQuestions()) {
@@ -159,6 +166,29 @@ public class SurveyService {
                 .build();
 
         responseRepository.save(response);
+
+        // ── Auto-assign route to student after survey submission ──────────
+        if (request.getSelectedRouteId() != null && request.getStudentId() != null) {
+            try {
+                Student student = studentRepository.findByStudentId(request.getStudentId())
+                        .orElseThrow(() -> new ResourceNotFoundException(
+                                "Student not found: " + request.getStudentId()));
+
+                Route route = routeRepository.findById(request.getSelectedRouteId())
+                        .orElseThrow(() -> new ResourceNotFoundException(
+                                "Route not found: " + request.getSelectedRouteId()));
+
+                student.setRoute(route);
+                studentRepository.save(student);
+
+                log.info("Route {} assigned to student {} after survey submission",
+                        request.getSelectedRouteId(), request.getStudentId());
+
+            } catch (ResourceNotFoundException e) {
+                // Log but don't fail the survey submission if route/student lookup fails
+                log.warn("Could not assign route after survey: {}", e.getMessage());
+            }
+        }
     }
 
     public List<SurveyResponse> getSurveyResponses(Long surveyId) {
